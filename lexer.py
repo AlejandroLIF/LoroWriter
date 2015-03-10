@@ -3,22 +3,34 @@ import ply.lex as lex
 reserved = {
 	'program'	: 'PROGRAM',
 	'var'		: 'VAR',
+	'function'	: 'FUNCTION',
+	
 	'if'		: 'IF',
 	'else'		: 'ELSE',
+	
 	'while'		: 'WHILE',
 	'for'		: 'FOR',
-	'function'	: 'FUNCTION',
+	
 	'end'		: 'END',
+	
 	'print'		: 'PRINT',
+	
 	'forward'	: 'FORWARD',
 	'backward'	: 'BACKWARD',
 	'right'		: 'RIGHT',
 	'left'		: 'LEFT',
-	'color'		: 'COLOR',
+	
 	'draw'		: 'DRAW',
 	'pressure'	: 'PRESSURE',
+	'color'		: 'COLOR',
+	
 	'true'		: 'TRUE',
-	'false'		: 'FALSE'
+	'false'		: 'FALSE',
+	
+	'red'		: 'RED',
+	'green'		: 'GREEN',
+	'blue'		: 'BLUE',
+	'black'		: 'BLACK'
 }
 
 tokens = [	'COMMA', 'SEMICOLON', 'COLON', 'PLUS', 'MINUS', 'MUL', 'DIV', 'LBRACE',
