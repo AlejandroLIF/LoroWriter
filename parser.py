@@ -30,12 +30,12 @@ def p_id3(p):
 	'''id3		: id1
 			| '''
 def p_type(p):
-	'''type		: INT
-			| FLO
-			| STR'''
+	'''type		: INTEGER
+			| FLOAT
+			| STRING'''
 
 def p_block(p):
-	'''block	: LBRACKET statements RBRACKET'''
+	'''block	: LBRACE statements RBRACE'''
 	
 def p_statements(p):
 	'''statements	: empty
