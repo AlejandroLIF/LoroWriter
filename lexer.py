@@ -39,7 +39,7 @@ reserved = {
 
 tokens = [	'COMMA', 'SEMICOLON', 'COLON', 'PLUS', 'MINUS', 'MUL', 'DIV', 'LBRACE',
 		'RBRACE', 'LPAREN', 'RPAREN', 'CEQ', 'CNE', 'CLT', 'CGT', 'CLE', 'CGE',
-		'STRING', 'ID', 'FLOAT', 'INTEGER' ] + list(reserved.values())
+		'STRING', 'ID', 'FLOAT', 'INTEGER', 'EQU', 'AND', 'OR' ] + list(reserved.values())
 		
 t_ignore = ' \t\r'
 t_COMMA = r'\,'
