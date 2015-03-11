@@ -30,7 +30,11 @@ reserved = {
 	'red'		: 'RED',
 	'green'		: 'GREEN',
 	'blue'		: 'BLUE',
-	'black'		: 'BLACK'
+	'black'		: 'BLACK',
+	
+	'int'		: 'INT',
+	'float'		: 'FLO',
+	'string'	: 'STR'
 }
 
 tokens = [	'COMMA', 'SEMICOLON', 'COLON', 'PLUS', 'MINUS', 'MUL', 'DIV', 'LBRACE',
