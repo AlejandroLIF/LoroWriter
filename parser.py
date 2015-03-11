@@ -117,7 +117,7 @@ def p_printable2(p):
 			
 def p_printable(p):
 	'''printable	: expression
-			| ID'''
+			| STRING'''
 			
 def p_expression(p):
 	'''expression	: exp expression2'''
@@ -127,7 +127,8 @@ def p_expression2(p):
 			| empty'''
 			
 def p_comparator(p):
-	'''comparator	: CGT 
+	'''comparator	: EQU
+			| CGT 
 			| CGE
 			| CLT
 			| CLE
