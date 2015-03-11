@@ -141,10 +141,10 @@ def p_comparator(p):
 			| OR'''
 			
 def p_exp(p):
-	'''exp		: term term2'''
+	'''exp		: term exp2'''
 	
-def p_term2(p):
-	'''term2	: sumsub exp
+def p_exp2(p):
+	'''exp2		: sumsub exp
 			| empty'''
 			
 def p_sumsub(p):
