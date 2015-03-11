@@ -53,7 +53,7 @@ def p_paraass(p):
 			| assignment'''
 			
 def p_assignment(p):
-	'''assignment	: EQU expression SEMICOLON'''
+	'''assignment	: CEQ expression SEMICOLON'''
 	
 def p_parameters(p):
 	'''parameters	: type ID parameters2'''
