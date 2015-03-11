@@ -53,7 +53,7 @@ def p_paraass(p):
 			| assignment'''
 			
 def p_assignment(p):
-	'''assignment	: CEQ expression SEMICOLON'''
+	'''assignment	: EQU expression SEMICOLON'''
 	
 def p_parameters(p):
 	'''parameters	: type ID parameters2'''
@@ -131,7 +131,7 @@ def p_expression2(p):
 			| empty'''
 			
 def p_comparator(p):
-	'''comparator	: EQU
+	'''comparator	: CEQ
 			| CGT 
 			| CGE
 			| CLT
