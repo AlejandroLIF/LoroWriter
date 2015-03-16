@@ -49,8 +49,15 @@ def p_statement(p):
 			| print'''
 			
 def p_paraass(p):
-	'''paraass	: LPAREN parameters RPAREN
+	'''paraass	: LPAREN args RPAREN
 			| assignment'''
+			
+def p_args(p):
+	'''args		: number args2'''
+	
+def p_args2(p):
+	'''args2	: COMMA args
+			| empty'''
 			
 def p_assignment(p):
 	'''assignment	: EQU expression SEMICOLON'''
