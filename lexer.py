@@ -21,6 +21,10 @@ reserved = {
 	'left'		: 'LEFT',
 	
 	'draw'		: 'DRAW',
+	'arc'		: 'ARC',
+	'circle'	: 'CIRCLE',
+	'square'	: 'SQUARE',
+	
 	'pressure'	: 'PRESSURE',
 	'color'		: 'COLOR',
 	
@@ -28,9 +32,15 @@ reserved = {
 	'false'		: 'FALSE',
 	
 	'red'		: 'RED',
+	'orange'	: 'ORANGE',
+	'yellow'	: 'YELLOW',
 	'green'		: 'GREEN',
 	'blue'		: 'BLUE',
+	'cyan'		: 'CYAN',
+	'purple'	: 'PURPLE',
+	'white'		: 'WHITE',
 	'black'		: 'BLACK',
+	
 	
 	'int'		: 'INT',
 	'float'		: 'FLO',
