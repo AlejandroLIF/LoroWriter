@@ -80,7 +80,10 @@ class procedureDirectory:
 			return True
 		else:
 			return False
-			
+
+
+'''
+" BEGIN TEST ROUTINE"
 glob = procedureDirectory("global");
 glob.add_variable("foo", 5);
 glob.add_variable("bar", 6);
@@ -96,3 +99,6 @@ glob.add_directory(method2);
 print glob
 print method1.list_all_variables();
 print method2.list_all_variables();
+print glob.get_variable("foo");
+print method1.get_variable("foo");
+'''
