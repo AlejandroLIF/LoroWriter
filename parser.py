@@ -1,7 +1,9 @@
+import sys
 import ply.yacc as yacc
 from lexer import tokens
 
 precedence =    (
+                ('left', 'AND', 'OR'),
                 ('left', 'PLUS', 'MINUS'),
                 ('left', 'MUL', 'DIV')
                 )
@@ -9,7 +11,7 @@ precedence =    (
 start = 'program'
 
 def p_program(p):
-    '''program  : PROGRAM ID vars functionDecs block end'''
+    '''program  : PROGRAM ID vars functionDecs block END'''
 
 def p_vars(p):
     '''vars     : VAR var 
@@ -48,9 +50,9 @@ def p_more_ids(p):
                 | empty'''
 
 def p_type(p):
-    '''type     : INTEGER
-                | FLOAT
-                | STRING'''
+    '''type     : INT
+                | FLO
+                | STR'''
 
 def p_block(p):
     '''block    : LBRACE statements RBRACE'''
@@ -70,8 +72,9 @@ def p_assignOrFunccall(p):
     '''assignOrFunccall : assignment
                         | functionCall'''
 
+#Warning: there is currently no way to assign a string value to a variable.
 def p_assignment(p):
-    '''assignment   : EQU expression'''
+    '''assignment   : EQU ssuperexp'''
 
 def p_functionCall(p):
     '''functionCall : LPAREN args RPAREN'''
@@ -126,18 +129,18 @@ def p_colorConstant(p):
                         | BLACK'''
 
 def p_condition(p):
-    '''condition    : IF LPAREN expression RPAREN block else'''
+    '''condition    : IF LPAREN ssuperexp RPAREN block else END'''
 
 def p_else(p):
     '''else     : ELSE block
                 | empty '''
-
+    
 def p_loop(p):
     '''loop     : loophead block END'''
 
 def p_loophead(p):
-    '''loophead : FOR LPAREN assignments SEMICOLON expression SEMICOLON ASSIGNMENTS RPAREN
-                | WHILE LPAREN expression RPAREN'''
+    '''loophead : FOR LPAREN assignments SEMICOLON ssuperexp SEMICOLON assignments RPAREN
+                | WHILE LPAREN ssuperexp RPAREN'''
 
 def p_assignments(p):
     '''assignments  : ID assignment more_assignments'''
@@ -154,15 +157,26 @@ def p_printables(p):
 
 #Possible error detected: printing a "string variable"?
 def p_printable(p):
-    '''printable    : expression
+    '''printable    : ssuperexp
                     | STRING'''
 
 def p_more_printables(p):
     '''more_printables  : COMMA printables
                         | empty'''
 
-def p_expression(p):
-    '''expression   : exp compareto'''
+def p_ssuperexp(p):
+    '''ssuperexp    : superexp ssuperexp2'''
+
+def p_ssuperexp2(p):
+    '''ssuperexp2   : andor ssuperexp
+                    | empty'''
+                    
+def p_andor(p):
+    '''andor        : AND
+                    | OR'''
+
+def p_superexp(p):
+    '''superexp   : exp compareto'''
 
 def p_compareto(p):
     '''compareto    : comparator exp
@@ -174,9 +188,7 @@ def p_comparator(p):
                     | CGE
                     | CLT
                     | CLE
-                    | CNE
-                    | AND
-                    | OR'''
+                    | CNE'''
 
 def p_exp(p):
     '''exp      : term exp2'''
@@ -201,9 +213,20 @@ def p_muldiv(p):
                 | DIV'''
 
 def p_factor(p):
-    '''factor   : LPAREN expression RPAREN
+    '''factor   : LPAREN ssuperexp RPAREN
                 | number'''
 
 def p_empty(p):
     'empty :'
     pass
+
+#Test routine
+if __name__ == '__main__':
+    if len(sys.argv) == 2:
+        f = open(sys.argv[1], 'r')
+        s = f.read()
+        parser = yacc.yacc()
+        parser.parse(s);
+    else:
+        print "Usage syntax: %s filename" %sys.argv[0]
+
