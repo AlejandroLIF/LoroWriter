@@ -81,24 +81,23 @@ class procedureDirectory:
 		else:
 			return False
 
+#Test routine
+if __name__ == '__main__':
+    glob = procedureDirectory("global");
+    glob.add_variable("foo", 5);
+    glob.add_variable("bar", 6);
+    method1 = procedureDirectory("method1", glob);
+    method1.add_variable("var", "a string");
+    method1.add_variable("foo", 1);
+    method2 = procedureDirectory("method2", glob);
+    method2.add_variable("var", 3.14);
+    method2.add_variable("bar", 2);
+    glob.add_directory(method1);
+    glob.add_directory(method2);
 
-'''
-" BEGIN TEST ROUTINE"
-glob = procedureDirectory("global");
-glob.add_variable("foo", 5);
-glob.add_variable("bar", 6);
-method1 = procedureDirectory("method1", glob);
-method1.add_variable("var", "a string");
-method1.add_variable("foo", 1);
-method2 = procedureDirectory("method2", glob);
-method2.add_variable("var", 3.14);
-method2.add_variable("bar", 2);
-glob.add_directory(method1);
-glob.add_directory(method2);
-
-print glob
-print method1.list_all_variables();
-print method2.list_all_variables();
-print glob.get_variable("foo");
-print method1.get_variable("foo");
-'''
+    print glob
+    print method1.list_all_variables();
+    print method2.list_all_variables();
+    print glob.get_variable("foo");
+    print method1.get_variable("foo");
+    
