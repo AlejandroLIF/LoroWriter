@@ -1,0 +1,25 @@
+program Example
+    var a, b : int;
+        c : float;
+        d : string;
+    
+    function myFunction(int n){
+        print(2*n > 4);
+    }
+    end
+    
+    {
+        a = 1;
+        b = 2;
+        c = 3.14;
+        a = 2*a + b/2 + a*b*c - a - b - c;
+    
+        if(a > 0){
+            print("a greater than 0");
+        }
+        else{
+            myFunction(b);
+        }
+        end;
+    }
+    end
