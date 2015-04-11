@@ -46,11 +46,25 @@ class procedureDirectory:
 		
 	def add_variable(self, identifier, variableType):
 		if identifier in self.variables:
-			print "Error! Variable \"{}\" already exists in scope \"{}\"!".format(str(identifier), str(self.variables[identifier]))
+			print "Error! Variable \"{}\" already exists in current scope as \"{}\"!".format(str(identifier), str(self.variables[identifier]))
 			return False
 		else:
 			self.variables[identifier] = Variable(identifier, variableType, self.next_address(variableType))
 			return True
+	
+	def add_temp(self, variableType):
+	    identifier = "temp_{}_{}".format(str(variableType), self.nextIndex)
+	    if add_variable(identifier, variableType):
+	        return identifier
+        else
+            return False
+	    
+    def add_const(self, variableType):
+	    identifier = "const_{}_{}".format(str(variableType), self.nextIndex)
+	    if add_variable(identifier, variableType):
+	        return self.variables[identifier]
+        else
+            return False
 	
 	#This function returns the next-available memory location that may store a variable of type variableType
 	#   it is a prototype placeholder and must be updated once the virtual machine's memory structure is defined.
