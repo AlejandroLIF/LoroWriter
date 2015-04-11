@@ -3,6 +3,7 @@ import ply.yacc as yacc
 from lexer import tokens
 from procedureDirectory import procedureDirectory
 from quadrupleGenerator import quadrupleGenerator
+import semanticCube
 
 currentDirectory = procedureDirectory("global")
 instructions = quadrupleGenerator()
@@ -114,9 +115,9 @@ def p_assignOrFunccall(p):
     '''assignOrFunccall : assignment
                         | functionCall'''
 
-#Warning: there is currently no way to assign a string value to a variable.
 def p_assignment(p):
     '''assignment   : EQU seen_EQU ssuperexp'''
+    
 
 def p_seen_EQU(p):
     '''seen_EQU :'''
@@ -131,14 +132,14 @@ def p_args(p):
                 | empty'''
 
 def p_arg(p):
-    '''arg      : number more_arg'''
+    '''arg      : operand more_arg'''
 
 def p_more_arg(p):
     '''more_arg : COMMA arg
                 | empty'''
 
 def p_instruction(p):
-    '''instruction  : movement number
+    '''instruction  : movement integer
                     | DRAW boolean
                     | PRESSURE integer
                     | COLOR colorConstant
@@ -152,9 +153,11 @@ def p_movement(p):
                 | RIGHT
                 | LEFT'''
 
-def p_number(p):
-    '''number   : integer
-                | FLOAT'''
+def p_operand(p):
+    '''operand" : INTEGER
+                | FLOAT
+                | STRING
+                | ID'''
 
 def p_boolean(p):
     '''boolean  : TRUE
@@ -185,8 +188,14 @@ def p_seen_condition(p):
     '''seen_condition   :'''
     global instructions
     condition = instructions.PopOperand()
-    #TEST IF type(condition) == bool
-    instructions.generateQuadruple("GOTOF", condition, 0, 0)
+    
+    #This has not yet been tested
+    if condition.Type is not bool
+        p_error(p)
+        raise TypeError("Expected type: bool")
+    #/This has not yet been tested
+
+    instructions.generateQuadruple("GOTOF", condition.Name, 0, 0)
     instructions.pushJumpStack(instructions.nextInstruction - 1)
 
 def p_seen_condition_block(p):
@@ -227,9 +236,15 @@ def p_seen_for_ssuperexp(p):
     '''seen_for_ssuperexp(p):'''
     global instructions
     condition = instructions.popOperandStack()
-    #TEST IF type(condition) == bool
+    
+    #This has not yet been tested
+    if condition.Type is not bool
+        p_error(p)
+        raise TypeError("Expected type: bool")
+    #/This has not yet been tested
+    
     pendingJump = instructions.popJumpStack()
-    instructions.generateQuadruple("GOTOF", condition, 0, 0)
+    instructions.generateQuadruple("GOTOF", condition.Name, 0, 0)
     instructions.pushJumpStack(instructions.nextInstruction - 1)
     instructions.pushJumpStack(instructions.nextInstruction + 1)
     instructions.generateQuadruple("GOTO", 0, 0, 0)
@@ -253,7 +268,13 @@ def p_seen_while_ssuperexp(p):
     '''seen_while_ssuperexp :'''
     global instructions
     condition = instructions.popOperandStack()
-    #TEST IF type(condition) == bool
+    
+    #This has not yet been tested
+    if condition.Type is not bool
+        p_error(p)
+        raise TypeError("Expected type: bool")
+    #/This has not yet been tested
+    
     pendingJump = instructions.popJumpStack()
     instructions.generateQuadruple("GOTOF", 0, 0, 0)
     instructions.pushJumpStack(instructions.nextInstruction - 1)
@@ -272,7 +293,7 @@ def p_print(p):
 def p_printables(p):
     '''printables   : printable more_printables'''
 
-#Possible error detected: printing a "string variable"?
+#Possible error detected: printing the value of a variable whose type is "string"?
 def p_printable(p):
     '''printable    : ssuperexp
                     | STRING'''
@@ -296,13 +317,20 @@ def p_andor(p):
 
 def p_superexp(p):
     '''superexp   : exp compareto'''
-    global instructions
+    global instructions, currentDirectory
     if instructions.topOperatorEquals('&&') or instructions.topOperatorEquals('||') :
         op2 = instructions.popOperand()
         op1 = instructions.popOperand()
         operator = instructions.popOperator()
-        result = "TEMPORARY" #ADD TEMPORARY VARIABLE HERE
-        instructions.generateQuadruple(operator, op1, op2, result)
+        
+        resultingType = getResultingType(op1.Type, op2.Type, operator)
+        if resultingType is None:
+            p_error(p)
+            raise TypeError("Type operation {} {} {} is incompatible".format(op1.Name, operator, op2.Name)
+        
+        result = currentDirectory.addTemp(resultingType)
+        
+        instructions.generateQuadruple(operator, op1.Name, op2.Name, result.Name)
         instructions.pushOperand(result)
     
     
@@ -316,8 +344,15 @@ def p_seen_exp(p):
     op2 = instructions.popOperand()
     op1 = instructions.popOperand()
     operator = instructions.popOperator()
-    result = "TEPMORARY" #ADD TEMPORARY VARIABLE HERE
-    instructions.generateQuadruple(operator, op1, op2, result)
+    
+    resultingType = getResultingType(op1.Type, op2.Type, operator)
+    if resultingType is None:
+        p_error(p)
+        raise TypeError("Type operation {} {} {} is incompatible".format(op1.Name, operator, op2.Name)
+    
+    result = currentDirectory.addTemp(resultingType)
+        
+    instructions.generateQuadruple(operator, op1.Name, op2.Name, result.Name)
     instructions.pushOperand(result)
 
 def p_comparator(p):
@@ -340,8 +375,15 @@ def p_seen_term(p):
         op2 = instructions.popOperand()
         op1 = instructions.popOperand()
         operator = instructions.popOperator()
-        result = "TEPMORARY" #ADD TEMPORARY VARIABLE HERE
-        instructions.generateQuadruple(operator, op1, op2, result)
+        
+        resultingType = getResultingType(op1.Type, op2.Type, operator)
+        if resultingType is None:
+            p_error(p)
+            raise TypeError("Type operation {} {} {} is incompatible".format(op1.Name, operator, op2.Name)
+        
+        result = currentDirectory.addTemp(resultingType)
+            
+        instructions.generateQuadruple(operator, op1.Name, op2.Name, result.Name)
         instructions.pushOperand(result)
 
 def p_exp2(p):
@@ -369,29 +411,40 @@ def p_muldiv(p):
 
 def p_factor(p):
     '''factor   : LPAREN seen_LPAREN ssuperexp RPAREN seen_RPAREN
-                | number seen_number'''
+                | operand seen_operand'''
     global instructions
     if instructions.topOperatorEquals('*') or instructions.topOperatorEquals('/'):
         op2 = instructions.popOperand()
         op1 = instructions.popOperand()
         operator = instructions.popOperator()
-        result = "TEPMORARY" #ADD TEMPORARY VARIABLE HERE
-        instructions.generateQuadruple(operator, op1, op2, result)
+        
+        resultingType = getResultingType(op1.Type, op2.Type, operator)
+        if resultingType is None:
+            p_error(p)
+            raise TypeError("Type operation {} {} {} is incompatible".format(op1.Name, operator, op2.Name)
+        
+        result = currentDirectory.addTemp(resultingType)
+            
+        instructions.generateQuadruple(operator, op1.Name, op2.Name, result.Name)
         instructions.pushOperand(result)
 
 def p_seen_LPAREN(p):
     '''seen_LPAREN  :'''
     global instructions
-    instructions.pushOperand(p[-1])
+    instructions.pushOperator(p[-1])
     
 def p_seen_RPAREN(p):
     '''seen_RPAREN  :'''
     global instructions
     instructions.popOperand()
 
-def seen_number(p):
-    '''seen_number  :'''
-    global instructions
+#TODO: parsed operands must be converted to variables in the procedure directory.
+#       all operands pushed to instructions must be of "Variable" type
+#       (defined in procedureDirectory.py)
+def seen_operand(p):
+    '''seen_operand  :'''
+    global instructions, currentDirectory
+    
     instructions.pushOperand(p[-1])
 
 def p_empty(p):
