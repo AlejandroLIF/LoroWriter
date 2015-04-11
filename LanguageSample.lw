@@ -3,9 +3,11 @@ program Example
         c : float;
         d : string;
     
-    function myFunction(int n){
-        print(2*n > 4);
-    }
+    function myFunction(int n)
+        var a : string;
+        {
+            print(2*n > 4, a);
+        }
     end
     
     {
