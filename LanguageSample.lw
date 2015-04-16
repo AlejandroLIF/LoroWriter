@@ -14,14 +14,17 @@ program Example
         a = 1;
         b = 2;
         c = 3.14;
-        a = 2*a + b/2 + a*b*c - a - b - c;
+        c = 2*a + b/2 + a*b*c - a - b - c;
     
-        if(a > 0){
+        if(d){
             print("a greater than 0");
         }
         else{
+            a = 3;
             myFunction(b);
         }
         end;
+        b=2;
+        a=3*b;
     }
     end
