@@ -1,4 +1,4 @@
-def getResultingType(op1, op2, operator):
+def getResultingType(operator, op1, op2):
     semanticCube = {    int     : {
                                     int     : {
                                                 '+'     : int,
@@ -231,7 +231,11 @@ def getResultingType(op1, op2, operator):
                                             }
                                 }
                     }
-    return semanticCube[op1][op2][operator]
+    try:
+        return semanticCube[op1][op2][operator]
+    except KeyError:
+        print "WARNING! KeyError in getResultingType: semanticCube[{}][{}][{}]".format(op1, op2, operator)
+        return None
     
 #Test routine
 if __name__ == '__main__':
