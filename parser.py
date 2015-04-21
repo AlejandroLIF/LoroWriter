@@ -9,7 +9,9 @@ currentDirectory = procedureDirectory("global")
 instructions = quadrupleGenerator()
 
 variableStack = []
+parameterStack = []
 seenType = None
+parameter = None 
 
 precedence =    (
                 ('left', 'AND', 'OR'),
@@ -65,7 +67,7 @@ def p_param(p):
 def p_seen_param(p):
     '''seen_param   :'''
     global currentDirectory
-    currentDirectory.add_variable(p[-1], seenType)
+    currentDirectory.add_parameter(p[-1], seenType)
 
 def p_more_param(p):
     '''more_param   : COMMA param
@@ -109,7 +111,7 @@ def p_seen_id_statement(p):
     '''seen_id_statement    :'''
     global instructions, currentDirectory
     variable = currentDirectory.get_variable(p[-1])
-    instructions.pushOperand(variable)
+    instructions.pushOperand(variable)          
 
 def p_assignOrFunccall(p):
     '''assignOrFunccall : assignment
@@ -134,14 +136,25 @@ def p_seen_EQU(p):
 
 def p_functionCall(p):
     '''functionCall : LPAREN args RPAREN'''
+    global instruction, currentDirectory, functionDirectory, parameterStack
+    functionDirectory = currentDirectory.get_directory(instruction.popOperand())
+    while parameterStack:
+        parameter = parameterStack.pop()
+        if functionDirectory.get_parameter(parameter).Type is currentDirectory.get_variable(parameter).Type:
+                
 
 def p_args(p):
     '''args     : arg
                 | empty'''
 
 def p_arg(p):
-    '''arg      : operand more_arg'''
-
+    '''arg      : operand seen_operand more_arg'''
+    
+def p_seen_operand(p):
+    '''seen_operand : '''
+    global parameterStack
+    parameterStack.append(p[-1])
+    
 def p_more_arg(p):
     '''more_arg : COMMA arg
                 | empty'''
