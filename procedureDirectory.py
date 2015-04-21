@@ -14,6 +14,7 @@ class procedureDirectory:
     def __init__(self, identifier, parent=None):
         self.identifier = identifier    #directory identifier
         self.parent = parent    #pointer to the directory's parent
+        self.parameters = {}     #current directory's parameter table
         self.variables = {}     #current directory's variable table
         self.directories = {}   #current directory's children
         self.nextIndex = 0      #used in calculating the next available memory address vor an added variable
@@ -24,6 +25,17 @@ class procedureDirectory:
     
     def to_string(self,):
         string = str(self.identifier) + "{\n"
+        
+        if(self.parameters):
+            string = string + "parameters:\n"
+            for identifier in self.parameters:
+                string = string + str(self.parameters[identifier])
+                #Append the constant value to constant variables
+                try:
+                    string = string + " := " + str(self.constants[identifier])
+                except KeyError:
+                    pass
+                string = string + "\n"
 
         if(self.variables):
             string = string + "variables:\n"
@@ -42,7 +54,15 @@ class procedureDirectory:
                 string = string + str(self.directories[identifier])
         string = string + "}\n\n"
         return string
-    
+
+    def get_parameter(self, identifier):
+        currDir = self
+        while currDir:
+            if identifier in currDir.parameters:
+                return currDir.parameters[identifier]
+            currDir = currDir.parent
+        return None
+        
     def get_variable(self, identifier):
         currDir = self
         while currDir:
@@ -51,6 +71,14 @@ class procedureDirectory:
             currDir = currDir.parent
         return None
         
+    def add_parameter(self, identifier, variableType):
+        if identifier in self.parameters:
+            print "Error! Variable \"{}\" already exists in current scope as \"{}\"!".format(str(identifier), str(self.parameters[identifier]))
+            return False
+        else:
+            self.parameters[identifier] = Variable(identifier, variableType, self.next_address(variableType))
+            return True
+            
     def add_variable(self, identifier, variableType):
         if identifier in self.variables:
             print "Error! Variable \"{}\" already exists in current scope as \"{}\"!".format(str(identifier), str(self.variables[identifier]))
@@ -80,12 +108,31 @@ class procedureDirectory:
         self.nextIndex += 1
         return "{}_{}".format(str(variableType), str(self.nextIndex))
     
+    def rem_parameter(self, identifier):
+        if identifier in self.parameters:
+            del self.parameters[identifier]
+            return True
+        else:
+            return False    
+            
     def rem_variable(self, identifier):
         if identifier in self.variables:
             del self.variables[identifier]
             return True
         else:
             return False
+
+    def list_all_parameters(self):
+        currDirr = self
+        string = ""
+        while(currDirr):
+            string = string + str(currDirr.identifier) + "{\n"
+            if(currDirr.parameters):
+                for identifier in currDirr.parameters:
+                    string = string + str(currDirr.parameters[identifier]) + "\n"
+            string = string + "}\n"
+            currDirr = currDirr.parent
+        return string
     
     def list_all_variables(self):
         currDirr = self
