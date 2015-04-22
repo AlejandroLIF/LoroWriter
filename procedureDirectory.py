@@ -1,3 +1,15 @@
+#Begin class Parameter
+class Parameter:
+    def __init__(self, Number='0', Name='0', Type=int, Address='0'):
+        self.Number = Number
+        self.Name = Name
+        self.Type = Type
+        self.Address = Address
+        
+    def __str__(self):
+        return "{}\t{}\t{}".format(str(self.Number), str(self.Name), str(self.Type), str(self.Address))
+#End class Parameter
+
 #Begin class Variable
 class Variable:
     def __init__(self, Name='0', Type=int, Address='0'):
@@ -18,6 +30,7 @@ class procedureDirectory:
         self.variables = {}     #current directory's variable table
         self.directories = {}   #current directory's children
         self.nextIndex = 0      #used in calculating the next available memory address vor an added variable
+        self.paramNumber = 0   #used to store how many parameters there are
         self.constants = {}     #stores the value of constants
     
     def __str__(self):
@@ -30,11 +43,6 @@ class procedureDirectory:
             string = string + "parameters:\n"
             for identifier in self.parameters:
                 string = string + str(self.parameters[identifier])
-                #Append the constant value to constant variables
-                try:
-                    string = string + " := " + str(self.constants[identifier])
-                except KeyError:
-                    pass
                 string = string + "\n"
 
         if(self.variables):
@@ -55,11 +63,11 @@ class procedureDirectory:
         string = string + "}\n\n"
         return string
 
-    def get_parameter(self, identifier):
+    def get_parameter(self, number):
         currDir = self
         while currDir:
-            if identifier in currDir.parameters:
-                return currDir.parameters[identifier]
+            if number in currDir.parameters:
+                return currDir.parameters[number]
             currDir = currDir.parent
         return None
         
@@ -71,12 +79,12 @@ class procedureDirectory:
             currDir = currDir.parent
         return None
         
-    def add_parameter(self, identifier, variableType):
+    def add_parameter(self, number, identifier, variableType):
         if identifier in self.parameters:
-            print "Error! Variable \"{}\" already exists in current scope as \"{}\"!".format(str(identifier), str(self.parameters[identifier]))
+            print "Error! Parameter \"{}\" already exists in current scope as \"{}\"!".format(std(number), str(identifier), str(self.parameters[number]))
             return False
         else:
-            self.parameters[identifier] = Variable(identifier, variableType, self.next_address(variableType))
+            self.parameters[number] = Parameter(number, identifier, variableType, self.next_address(variableType))
             return True
             
     def add_variable(self, identifier, variableType):
@@ -108,9 +116,9 @@ class procedureDirectory:
         self.nextIndex += 1
         return "{}_{}".format(str(variableType), str(self.nextIndex))
     
-    def rem_parameter(self, identifier):
-        if identifier in self.parameters:
-            del self.parameters[identifier]
+    def rem_parameter(self, number):
+        if number in self.parameters:
+            del self.parameters[number]
             return True
         else:
             return False    
@@ -126,10 +134,10 @@ class procedureDirectory:
         currDirr = self
         string = ""
         while(currDirr):
-            string = string + str(currDirr.identifier) + "{\n"
+            string = string + str(currDirr.number) + "{\n"
             if(currDirr.parameters):
-                for identifier in currDirr.parameters:
-                    string = string + str(currDirr.parameters[identifier]) + "\n"
+                for number in currDirr.parameters:
+                    string = string + str(currDirr.parametersnumber]) + "\n"
             string = string + "}\n"
             currDirr = currDirr.parent
         return string
@@ -166,6 +174,10 @@ class procedureDirectory:
             return True
         else:
             return False
+            
+    def add_paramNumber(self, number):
+        self.paramNumber = number
+        return True
 #End class procedureDirectory
 
 #Test routine
