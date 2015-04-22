@@ -26,11 +26,12 @@ class procedureDirectory:
     def __init__(self, identifier, parent=None):
         self.identifier = identifier    #directory identifier
         self.parent = parent    #pointer to the directory's parent
-        self.parameters = {}     #current directory's parameter table
+        self.parameters = {}    #current directory's parameter table
         self.variables = {}     #current directory's variable table
         self.directories = {}   #current directory's children
         self.nextIndex = 0      #used in calculating the next available memory address vor an added variable
-        self.paramNumber = 0   #used to store how many parameters there are
+        self.paramNumber = 0    #used to store how many parameters there are
+        self.startAddress = 0   #function start address
         self.constants = {}     #stores the value of constants
     
     def __str__(self):
@@ -174,10 +175,7 @@ class procedureDirectory:
             return True
         else:
             return False
-            
-    def add_paramNumber(self, number):
-        self.paramNumber = number
-        return True
+
 #End class procedureDirectory
 
 #Test routine
