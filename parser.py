@@ -6,12 +6,14 @@ from quadrupleGenerator import quadrupleGenerator
 from semanticCube import getResultingType
 
 currentDirectory = procedureDirectory("global")
+functionDirectory = None
 instructions = quadrupleGenerator()
 
 variableStack = []
-parameterStack = []
 seenType = None
-parameter = None 
+parameter = None
+parameterCounter = None 
+FuncVarName = None
 
 precedence =    (
                 ('left', 'AND', 'OR'),
@@ -45,11 +47,12 @@ def p_functionDecs(p):
     '''functionDecs : functionDec functionDecs
                     | empty'''
 
-
 def p_functionDec(p):
     '''functionDec  : FUNCTION ID seen_function_id LPAREN params RPAREN vars block END'''
     global currentDirectory
     currentDirectory = currentDirectory.parent
+    instructions.generateQuadruple("GOTO",0,0,0)
+    instructions.pushJumpStack(instructions.nextInstruction - 1)
     
 def p_seen_function_id(p):
     '''seen_function_id :'''
@@ -67,7 +70,8 @@ def p_param(p):
 def p_seen_param(p):
     '''seen_param   :'''
     global currentDirectory
-    currentDirectory.add_parameter(p[-1], seenType)
+    currentDirectory.paramNumber = currentDirectory.paramNumber + 1
+    currentDirectory.add_parameter(currentDirectory.paramNumber,p[-1], seenType)
 
 def p_more_param(p):
     '''more_param   : COMMA param
@@ -101,18 +105,17 @@ def p_statements(p):
                     | empty'''
 
 def p_statement(p):
-    '''statement    : ID seen_id_statement assignOrFunccall
+    '''statement    : ID seen_id_ass_or_fun assignOrFunccall
                     | instruction
                     | condition
                     | loop
                     | print'''
-                    
-def p_seen_id_statement(p):
-    '''seen_id_statement    :'''
-    global instructions, currentDirectory
-    variable = currentDirectory.get_variable(p[-1])
-    instructions.pushOperand(variable)          
 
+def p_seen_id_ass_or_fun(p):
+    '''seen_id_ass_or_fun : '''
+    global FuncVarName
+    FuncVarName = p[-1]
+   
 def p_assignOrFunccall(p):
     '''assignOrFunccall : assignment
                         | functionCall'''
@@ -131,17 +134,29 @@ def p_assignment(p):
 
 def p_seen_EQU(p):
     '''seen_EQU :'''
-    global instructions
+    global instructions, currentDirectory, FuncVarName
+    variable = currentDirectory.get_variable(FuncVarName)
+    instructions.pushOperand(variable)  
     instructions.pushOperator(p[-1])
 
 def p_functionCall(p):
-    '''functionCall : LPAREN args RPAREN'''
-    global instruction, currentDirectory, functionDirectory, parameterStack
-    functionDirectory = currentDirectory.get_directory(instruction.popOperand())
-    while parameterStack:
-        parameter = parameterStack.pop()
-        if functionDirectory.get_parameter(parameter).Type is currentDirectory.get_variable(parameter).Type:
+    '''functionCall : LPAREN seen_function_id args RPAREN'''
+    global instruction, currentDirectory, functionDirectory, parameterCounter
+    if functionDirectory.paramNumber == parameterCounter:
+        instructions.generateCuadruple("GOTO",0,0,functionDirectory.startAddress)
+        instructions.pushJumpStack(instructions.nextInstruction)
+    else:
+        raise TypeError("Sent {} arguments, expected {}".format(parameterCounter,functionDirectory.paramNumber))
                 
+def p_seen_function_id(p):
+    '''seen_function_id : '''
+    global currentDirectory, functionDirectory, FuncVarName, parameterCounter
+    functionDirectory = currentDirectory.get_directory(FuncVarName)
+    parameterCounter = 0
+    if functionDirectory is not None:
+        instructions.generateCuadruple("ERA",FuncVarName,0,0)
+    else:
+        raise TypeError("Undeclared function")
 
 def p_args(p):
     '''args     : arg
@@ -152,8 +167,16 @@ def p_arg(p):
     
 def p_seen_operand(p):
     '''seen_operand : '''
-    global parameterStack
-    parameterStack.append(p[-1])
+    global instructions,currentDirectory,functionDirectory,parameterCounter,parameter
+    parameterCounter += 1
+    parameter = instructions.popOperand()
+    if parameterCounter <= functionDirectory.paramNumber:
+        if functionDirectory.get_parameter(parameterCounter).Type is parameter.Type:
+            instructions.generateCuadruple("=",parameter,0,functionDirectory.get_parameter(parameterCounter))
+        else:
+            raise TypeError("Incompatible types. Is {}, expected {}".format(parameter.Type,functionDirectory.get_parameter(parameterCounter)))
+    else:
+        raise TypeError("Sent more arguments than expected")
     
 def p_more_arg(p):
     '''more_arg : COMMA arg
