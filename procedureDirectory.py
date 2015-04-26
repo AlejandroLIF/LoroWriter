@@ -29,7 +29,20 @@ class procedureDirectory:
         self.parameters = {}    #current directory's parameter table
         self.variables = {}     #current directory's variable table
         self.directories = {}   #current directory's children
-        self.nextIndex = 0      #used in calculating the next available memory address vor an added variable
+        self.nextVarInt = 0      #used in calculating the next available memory address vor an added variable
+        self.nextVarFloat = 2000      #used in calculating the next available memory address vor an added variable
+        self.nextVarString = 4000      #used in calculating the next available memory address vor an added variable
+        self.nextVarBool = 6000      #used in calculating the next available memory address vor an added variable
+        self.nextTempInt = 8000      #used in calculating the next available memory address vor an added variable
+        self.nextTempFloat = 10000      #used in calculating the next available memory address vor an added variable
+        self.nextTempString = 12000      #used in calculating the next available memory address vor an added variable
+        self.nextTempBool = 14000      #used in calculating the next available memory address vor an added variable
+        self.nextConstInt = 16000      #used in calculating the next available memory address vor an added variable
+        self.nextConstFloat = 18000      #used in calculating the next available memory address vor an added variable
+        self.nextConstString = 20000      #used in calculating the next available memory address vor an added variable
+        self.nextConstBool = 22000      #used in calculating the next available memory address vor an added variable
+        self.nextConstant = 0
+        self.nextTemporal = 0
         self.paramNumber = 0    #used to store how many parameters there are
         self.startAddress = 0   #function start address
         self.constants = {}     #stores the value of constants
@@ -80,32 +93,32 @@ class procedureDirectory:
             currDir = currDir.parent
         return None
         
-    def add_parameter(self, number, identifier, variableType):
+    def add_parameter(self, number, identifier, variableType, variableClass = "variable"):
         if identifier in self.parameters:
             print "Error! Parameter \"{}\" already exists in current scope as \"{}\"!".format(std(number), str(identifier), str(self.parameters[number]))
             return False
         else:
-            self.parameters[number] = Parameter(number, identifier, variableType, self.next_address(variableType))
+            self.parameters[number] = Parameter(number, identifier, variableType, self.next_address(variableClass, variableType))
             return True
             
-    def add_variable(self, identifier, variableType):
+    def add_variable(self, identifier, variableType, variableClass = "variable"):
         if identifier in self.variables:
             print "Error! Variable \"{}\" already exists in current scope as \"{}\"!".format(str(identifier), str(self.variables[identifier]))
             return False
         else:
-            self.variables[identifier] = Variable(identifier, variableType, self.next_address(variableType))
+            self.variables[identifier] = Variable(identifier, variableType, self.next_address(variableClass, variableType))
             return True
     
-    def add_temp(self, variableType):
-        identifier = "temp_{}_{}".format(str(variableType), self.nextIndex + 1)
-        if self.add_variable(identifier, variableType):
+    def add_temp(self, variableType, variableClass = "temporal"):
+        identifier = "temp_{}_{}".format(str(variableType), self.nextTemporal + 1)
+        if self.add_variable(identifier, variableType, variableClass):
             return self.variables[identifier]
         else:
             return False
         
-    def add_const(self, variableType, variableValue):
-        identifier = "const_{}_{}".format(str(variableType), self.nextIndex + 1)
-        if self.add_variable(identifier, variableType):
+    def add_const(self, variableType, variableValue, variableClass = "constant"):
+        identifier = "const_{}_{}".format(str(variableType), self.nextConstant + 1)
+        if self.add_variable(identifier, variableType, variableClass):
             self.constants[identifier] = variableValue
             return self.variables[identifier]
         else:
@@ -113,9 +126,46 @@ class procedureDirectory:
     
     #TODO:  This function returns the next-available memory location that may store a variable of type variableType
     #       it is a prototype placeholder and must be updated once the virtual machine's memory structure is defined.
-    def next_address(self, variableType):
-        self.nextIndex += 1
-        return "{}_{}".format(str(variableType), str(self.nextIndex))
+    def next_address(self, variableClass, variableType):
+        if variableClass is "variable":
+            if variableType is int:
+                self.nextVarInt+=1
+                return "{}_{}".format(str(variableClass), str(variableType), str(self.nextVarInt))
+            if variableType is float:
+                self.nextVarFloat+=1
+                return "{}_{}".format(str(variableClass), str(variableType), str(self.nextVarFloat))
+            if variableType is string:
+                self.nextVarString+=1
+                return "{}_{}".format(str(variableClass), str(variableType), str(self.nextVarString))
+            if variableType is bool:
+                self.nextVarBool+=1
+                return "{}_{}".format(str(variableClass), str(variableType), str(self.nextVarBool))
+        if variableClass is "temporal":
+            if variableType is int:
+                self.nextTempInt+=1
+                return "{}_{}".format(str(variableClass), str(variableType), str(self.nextTempInt))
+            if variableType is float:
+                self.nextTempFloat+=1
+                return "{}_{}".format(str(variableClass), str(variableType), str(self.nextTempFloat))
+            if variableType is string:
+                self.nextTempString+=1
+                return "{}_{}".format(str(variableClass), str(variableType), str(self.nextTempString))
+            if variableType is bool:
+                self.nextTempBool+=1
+                return "{}_{}".format(str(variableClass), str(variableType), str(self.nextTempBool))
+        if variableClass is "constant":
+            if variableType is int:
+                self.nextConstInt+=1
+                return "{}_{}".format(str(variableClass), str(variableType), str(self.nextConstInt))
+            if variableType is float:
+                self.nextConstFloat+=1
+                return "{}_{}".format(str(variableClass), str(variableType), str(self.nextConstFloat))
+            if variableType is string:
+                self.nextConstString+=1
+                return "{}_{}".format(str(variableClass), str(variableType), str(self.nextConstString))
+            if variableType is bool:
+                self.nextConstBool+=1
+                return "{}_{}".format(str(variableClass), str(variableType), str(self.nextConstBool))
     
     def rem_parameter(self, number):
         if number in self.parameters:
