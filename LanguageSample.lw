@@ -16,7 +16,7 @@ program Example
         c = 3.14;
         c = 2*a + b/2 + a*b*c - a - b - c;
     
-        if(d){
+        if(a<b){
             print("a greater than 0");
         }
         else{
