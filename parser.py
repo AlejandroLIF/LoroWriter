@@ -140,7 +140,7 @@ def p_seen_EQU(p):
     instructions.pushOperator(p[-1])
 
 def p_functionCall(p):
-    '''functionCall : LPAREN seen_function_id args RPAREN'''
+    '''functionCall : LPAREN seen_func_id args RPAREN'''
     global instruction, currentDirectory, functionDirectory, parameterCounter
     if functionDirectory.paramNumber == parameterCounter:
         instructions.generateCuadruple("GOTO",0,0,functionDirectory.startAddress)
@@ -148,8 +148,8 @@ def p_functionCall(p):
     else:
         raise TypeError("Sent {} arguments, expected {}".format(parameterCounter,functionDirectory.paramNumber))
                 
-def p_seen_function_id(p):
-    '''seen_function_id : '''
+def p_seen_func_id(p):
+    '''seen_func_id : '''
     global currentDirectory, functionDirectory, FuncVarName, parameterCounter
     functionDirectory = currentDirectory.get_directory(FuncVarName)
     parameterCounter = 0
