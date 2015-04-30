@@ -139,8 +139,9 @@ def p_assignment(p):
     op1 = instructions.popOperand()
     result = instructions.popOperand()
     operator = instructions.popOperator()
-        
-    if result.Type is op1.Type:
+   
+    validType = getResultingType(operator,result.Type,op1.Type)
+    if validType:
         instructions.generateQuadruple(operator, op1, 0, result)
     else:
         raise TypeError("Cannot store {} in variable {}".format(currentDirectory.get_variable(op1.Name), currentDirectory.get_variable(result.Name)))
@@ -381,19 +382,22 @@ def p_seen_assignments1(p):
 def p_seen_for_ssuperexp(p):
     '''seen_for_ssuperexp    :'''
     global instructions
-    condition = instructions.popOperandStack()
+    condition = instructions.popOperand()
     
-    if condition.Type is not bool:
+    if condition.Type is bool:
+        pendingJump = instructions.popJumpStack()
+        instructions.generateQuadruple("GOTOF", condition, 0, 0)
+        instructions.pushJumpStack(instructions.nextInstruction - 1)
+        instructions.pushJumpStack(instructions.nextInstruction + 1)
+        instructions.generateQuadruple("GOTO", 0, 0, 0)
+        instructions.pushJumpStack(instructions.nextInstruction - 1)
+        instructions.pushJumpStack(pendingJump)
+
+    else:
         p_error(p)
         raise TypeError("Expected type: bool")
     
-    pendingJump = instructions.popJumpStack()
-    instructions.generateQuadruple("GOTOF", condition, 0, 0)
-    instructions.pushJumpStack(instructions.nextInstruction - 1)
-    instructions.pushJumpStack(instructions.nextInstruction + 1)
-    instructions.generateQuadruple("GOTO", 0, 0, 0)
-    instructions.pushJumpStack(instructions.nextInstruction - 1)
-    instructions.pushJumpStack(pendingJump)
+    
 
 def p_seen_assignments2(p):
     '''seen_assignments2    :'''
@@ -411,7 +415,7 @@ def p_seen_while_LPAREN(p):
 def p_seen_while_ssuperexp(p):
     '''seen_while_ssuperexp :'''
     global instructions
-    condition = instructions.popOperandStack()
+    condition = instructions.popOperand()
     
     if condition.Type is not bool:
         p_error(p)
@@ -423,7 +427,7 @@ def p_seen_while_ssuperexp(p):
     instructions.pushJumpStack(pendingJump)
 
 def p_assignments(p):
-    '''assignments  : ID assignment more_assignments'''
+    '''assignments  : ID seen_id_ass_or_fun assignment more_assignments'''
 
 def p_more_assignments(p):
     '''more_assignments : COMMA assignments
@@ -604,8 +608,8 @@ def p_empty(p):
 def p_error(p):
     '''error    :'''
     global instructions, currentDirectory
-    print currentDirectory
-    print instructions
+    #print currentDirectory
+    #print instructions
 
 #Test routine
 if __name__ == '__main__':
