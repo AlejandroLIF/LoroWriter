@@ -55,8 +55,8 @@ class procedureDirectory:
         
         if(self.parameters):
             string = string + "parameters:\n"
-            for identifier in self.parameters:
-                string = string + str(self.parameters[identifier])
+            for number in self.parameters:
+                string = string + str(self.parameters[number])
                 string = string + "\n"
 
         if(self.variables):
@@ -134,7 +134,7 @@ class procedureDirectory:
             if variableType is float:
                 self.nextVarFloat+=1
                 return "{}_{}".format(str(variableClass), str(variableType), str(self.nextVarFloat))
-            if variableType is string:
+            if variableType is str:
                 self.nextVarString+=1
                 return "{}_{}".format(str(variableClass), str(variableType), str(self.nextVarString))
             if variableType is bool:
@@ -147,7 +147,7 @@ class procedureDirectory:
             if variableType is float:
                 self.nextTempFloat+=1
                 return "{}_{}".format(str(variableClass), str(variableType), str(self.nextTempFloat))
-            if variableType is string:
+            if variableType is str:
                 self.nextTempString+=1
                 return "{}_{}".format(str(variableClass), str(variableType), str(self.nextTempString))
             if variableType is bool:
@@ -160,7 +160,7 @@ class procedureDirectory:
             if variableType is float:
                 self.nextConstFloat+=1
                 return "{}_{}".format(str(variableClass), str(variableType), str(self.nextConstFloat))
-            if variableType is string:
+            if variableType is str:
                 self.nextConstString+=1
                 return "{}_{}".format(str(variableClass), str(variableType), str(self.nextConstString))
             if variableType is bool:
@@ -188,7 +188,7 @@ class procedureDirectory:
             string = string + str(currDirr.number) + "{\n"
             if(currDirr.parameters):
                 for number in currDirr.parameters:
-                    string = string + str(currDirr.parametersnumber]) + "\n"
+                    string = string + str(currDirr.parameters[number]) + "\n"
             string = string + "}\n"
             currDirr = currDirr.parent
         return string
