@@ -13,7 +13,16 @@ program Example
     function myFunction2(int s, int y)
         var x : string;
         {
+            myFunction(s);
             print(2*s > 4, x, 2+y);
+        }
+    end
+        
+    function myFunction3()
+        var u : float;
+        {
+            u = 5.2;
+            print(u);
         }
     end
     
@@ -35,6 +44,7 @@ program Example
         myFunction2(a,b);
         b=2;
         
+        myFunction3();
         myFunction(b);
         a=3*b;
     }
