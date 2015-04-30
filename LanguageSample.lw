@@ -10,6 +10,13 @@ program Example
         }
     end
     
+    function myFunction2(int s, int y)
+        var x : string;
+        {
+            print(2*s > 4, x, 2+y);
+        }
+    end
+    
     {
         a = 1;
         b = 2;
@@ -24,7 +31,11 @@ program Example
             myFunction(b);
         }
         end;
+        
+        myFunction2(a,b);
         b=2;
+        
+        myFunction(b);
         a=3*b;
     }
     end
