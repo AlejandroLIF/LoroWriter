@@ -11,8 +11,7 @@ instructions = quadrupleGenerator()
 
 variableStack = []
 seenType = None
-parameter = None
-parameterCounter = None 
+parameterCounter = 0 
 FuncVarName = None
 
 precedence =    (
@@ -24,7 +23,14 @@ precedence =    (
 start = 'program'
 
 def p_program(p):
-    '''program  : PROGRAM ID vars functionDecs block END'''
+    '''program  : PROGRAM ID vars functionDecs seen_main block END'''
+
+def p_seen_main(p):
+    '''seen_main : '''
+    global instructions    
+    while len(instructions.jumpStack) is not 0:
+        pendingJump = instructions.popJumpStack()
+        instructions.setQuadrupleResult(pendingJump, instructions.nextInstruction) 
 
 def p_vars(p):
     '''vars     : VAR var 
@@ -57,8 +63,9 @@ def p_functionDec(p):
 def p_seen_function_id(p):
     '''seen_function_id :'''
     global currentDirectory
-    currentDirectory.add_directory(p[-1])
-    currentDirectory = currentDirectory.get_directory(p[-1])
+    functionID = p[-1]
+    currentDirectory.add_directory(functionID)
+    currentDirectory = currentDirectory.get_directory(functionID)
 
 def p_params(p):
     '''params   : param
@@ -70,8 +77,9 @@ def p_param(p):
 def p_seen_param(p):
     '''seen_param   :'''
     global currentDirectory
-    currentDirectory.paramNumber = currentDirectory.paramNumber + 1
-    currentDirectory.add_parameter(currentDirectory.paramNumber,p[-1], seenType)
+    variableID = p[-1]
+    currentDirectory.parameters.append(variableID)
+    currentDirectory.add_variable(variableID, seenType)
 
 def p_more_param(p):
     '''more_param   : COMMA param
@@ -98,7 +106,12 @@ def p_type(p):
     seenType = variableTypes[p[1]]
 
 def p_block(p):
-    '''block    : LBRACE statements RBRACE'''
+    '''block    : LBRACE seen_address statements RBRACE'''
+
+def p_seen_address(p):
+    '''seen_address : '''
+    global currentDirectory, instructions
+    currentDirectory.startAddress = instructions.nextInstruction
 
 def p_statements(p):
     '''statements   : statement SEMICOLON statements
@@ -136,26 +149,31 @@ def p_seen_EQU(p):
     '''seen_EQU :'''
     global instructions, currentDirectory, FuncVarName
     variable = currentDirectory.get_variable(FuncVarName)
-    instructions.pushOperand(variable)  
-    instructions.pushOperator(p[-1])
+
+    if variable:
+        instructions.pushOperand(variable)
+        instructions.pushOperator(p[-1])
+    else:
+        p_error(p)
+        #WARNING: Change error type
+        raise TypeError("Variable \"{}\" undeclared!".format(FuncVarName))
 
 def p_functionCall(p):
     '''functionCall : LPAREN seen_func_id args RPAREN'''
     global instruction, currentDirectory, functionDirectory, parameterCounter
-    if functionDirectory.paramNumber == parameterCounter:
-        instructions.generateCuadruple("GOTO",0,0,functionDirectory.startAddress)
-        instructions.pushJumpStack(instructions.nextInstruction)
+    if len(functionDirectory.parameters) == parameterCounter:
+        instructions.generateQuadruple("GOTO",0,0,functionDirectory.startAddress)
     else:
-        raise TypeError("Sent {} arguments, expected {}".format(parameterCounter,functionDirectory.paramNumber))
+        #WARNING: Wrong number of arguments error
+        raise TypeError("Sent {} arguments, expected {}".format(parameterCounter,functionDirectory.parameters.len()))
                 
 def p_seen_func_id(p):
     '''seen_func_id : '''
     global currentDirectory, functionDirectory, FuncVarName, parameterCounter
     functionDirectory = currentDirectory.get_directory(FuncVarName)
     parameterCounter = 0
-    if functionDirectory is not None:
-        instructions.generateCuadruple("ERA",FuncVarName,0,0)
-    else:
+
+    if not functionDirectory:
         raise TypeError("Undeclared function")
 
 def p_args(p):
@@ -167,16 +185,18 @@ def p_arg(p):
     
 def p_seen_operand(p):
     '''seen_operand : '''
-    global instructions,currentDirectory,functionDirectory,parameterCounter,parameter
-    parameterCounter += 1
-    parameter = instructions.popOperand()
-    if parameterCounter <= functionDirectory.paramNumber:
-        if functionDirectory.get_parameter(parameterCounter).Type is parameter.Type:
-            instructions.generateCuadruple("=",parameter,0,functionDirectory.get_parameter(parameterCounter))
+    global instructions,currentDirectory,functionDirectory,parameterCounter
+    op1 = instructions.popOperand()
+    nextParam = functionDirectory.parameters[parameterCounter]
+
+    if parameterCounter <= len(functionDirectory.parameters):
+        if functionDirectory.get_variable(nextParam).Type is op1.Type:
+            instructions.generateQuadruple("=",op1,0,functionDirectory.get_variable(nextParam))
         else:
-            raise TypeError("Incompatible types. Is {}, expected {}".format(parameter.Type,functionDirectory.get_parameter(parameterCounter)))
+            raise TypeError("Incompatible types. Is {}, expected {}".format(op1.Type,functionDirectory.get_variable(nextParam)))
     else:
         raise TypeError("Sent more arguments than expected")
+    parameterCounter += 1
     
 def p_more_arg(p):
     '''more_arg : COMMA arg
@@ -264,8 +284,11 @@ def p_operand(p):
     else:
         varType = type(p[1])
         op1 = currentDirectory.add_const(varType, p[1])
-        
-    instructions.pushOperand(op1)
+
+    if op1:    
+        instructions.pushOperand(op1)
+    else:
+        print op1, p[1], "OPERAND ERROR"
     
 def p_boolean(p):
     '''boolean  : TRUE
@@ -282,8 +305,11 @@ def p_integer(p):
         op1 = currentDirectory.getVariable(p[1])
     else:
         op1 = currentDirectory.add_const(int, p[1])
-        
-    instructions.pushOperand(op)
+    
+    if op1:
+        instructions.pushOperand(op)
+    else:
+        print "INTEGER ERROR"
 
 def p_colorConstant(p):
     '''colorConstant    : RED
@@ -310,12 +336,13 @@ def p_seen_condition(p):
     global instructions
     condition = instructions.popOperand()
     
-    if condition.Type is not bool:
+    if condition.Type is bool:
+        instructions.generateQuadruple("GOTOF", condition, 0, 0)
+        instructions.pushJumpStack(instructions.nextInstruction - 1)
+    else:
         p_error(p)
+        print condition
         raise TypeError("Expected type: bool")
-
-    instructions.generateQuadruple("GOTOF", condition, 0, 0)
-    instructions.pushJumpStack(instructions.nextInstruction - 1)
 
 def p_seen_condition_block(p):
     '''seen_condition_block :'''
@@ -328,7 +355,6 @@ def p_seen_condition_block(p):
 def p_else(p):
     '''else     : ELSE block
                 | empty '''
-    
     
 def p_loop(p):
     '''loop     : loophead block seen_loop_block END'''
@@ -449,8 +475,11 @@ def p_superexp(p):
     
         result = currentDirectory.add_temp(resultingType)
         
-        instructions.generateQuadruple(operator, op1, op2, result)
-        instructions.pushOperand(result)
+        if result:
+            instructions.generateQuadruple(operator, op1, op2, result)
+            instructions.pushOperand(result)
+        else:
+            print "SUPEREXP ERROR"
     
     
 def p_compareto(p):
@@ -471,8 +500,11 @@ def p_seen_exp(p):
     
     result = currentDirectory.add_temp(resultingType)
         
-    instructions.generateQuadruple(operator, op1, op2, result)
-    instructions.pushOperand(result)
+    if result:
+        instructions.generateQuadruple(operator, op1, op2, result)
+        instructions.pushOperand(result)
+    else:
+        print "SEEN_EXP ERROR"    
 
 def p_comparator(p):
     '''comparator   : CEQ
@@ -501,9 +533,12 @@ def p_seen_term(p):
             raise TypeError("Type operation {} {} {} is incompatible".format(op1.Name, operator, op2.Name))
         
         result = currentDirectory.add_temp(resultingType)
-            
-        instructions.generateQuadruple(operator, op1, op2, result)
-        instructions.pushOperand(result)
+        
+        if result:    
+            instructions.generateQuadruple(operator, op1, op2, result)
+            instructions.pushOperand(result)
+        else:
+            print "SEEN_TERM ERROR"        
 
 def p_exp2(p):
     '''exp2     : sumsub exp
@@ -538,14 +573,18 @@ def p_factor(p):
         operator = instructions.popOperator()
         
         resultingType = getResultingType(operator, op1.Type, op2.Type)
+
         if resultingType is None:
             p_error(p)
             raise TypeError("Type operation {} {} {} is incompatible".format(op1.Name, operator, op2.Name))
         
         result = currentDirectory.add_temp(resultingType)
-            
-        instructions.generateQuadruple(operator, op1, op2, result)
-        instructions.pushOperand(result)
+        
+        if result:    
+            instructions.generateQuadruple(operator, op1, op2, result)
+            instructions.pushOperand(result)
+        else:
+            print "FACTOR ERROR"
 
 def p_seen_LPAREN(p):
     '''seen_LPAREN  :'''
@@ -575,7 +614,7 @@ if __name__ == '__main__':
         s = f.read()
         parser = yacc.yacc()
         parser.parse(s);
-        print currentDirectory
+        #print currentDirectory
         print instructions
     else:
         print "Usage syntax: %s filename" %sys.argv[0]
