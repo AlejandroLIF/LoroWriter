@@ -1,15 +1,3 @@
-#Begin class Parameter
-class Parameter:
-    def __init__(self, Number='0', Name='0', Type=int, Address='0'):
-        self.Number = Number
-        self.Name = Name
-        self.Type = Type
-        self.Address = Address
-        
-    def __str__(self):
-        return "{}\t{}\t{}".format(str(self.Number), str(self.Name), str(self.Type), str(self.Address))
-#End class Parameter
-
 #Begin class Variable
 class Variable:
     def __init__(self, Name='0', Type=int, Address='0'):
@@ -26,7 +14,7 @@ class procedureDirectory:
     def __init__(self, identifier, parent=None):
         self.identifier = identifier    #directory identifier
         self.parent = parent    #pointer to the directory's parent
-        self.parameters = {}    #current directory's parameter table
+        self.parameters = []    #current directory's parameter table
         self.variables = {}     #current directory's variable table
         self.directories = {}   #current directory's children
         self.nextVarInt = 0      #used in calculating the next available memory address vor an added variable
@@ -43,7 +31,6 @@ class procedureDirectory:
         self.nextConstBool = 22000      #used in calculating the next available memory address vor an added variable
         self.nextConstant = 0
         self.nextTemporal = 0
-        self.paramNumber = 0    #used to store how many parameters there are
         self.startAddress = 0   #function start address
         self.constants = {}     #stores the value of constants
     
@@ -52,12 +39,6 @@ class procedureDirectory:
     
     def to_string(self,):
         string = str(self.identifier) + "{\n"
-        
-        if(self.parameters):
-            string = string + "parameters:\n"
-            for number in self.parameters:
-                string = string + str(self.parameters[number])
-                string = string + "\n"
 
         if(self.variables):
             string = string + "variables:\n"
@@ -77,13 +58,6 @@ class procedureDirectory:
         string = string + "}\n\n"
         return string
 
-    def get_parameter(self, number):
-        currDir = self
-        while currDir:
-            if number in currDir.parameters:
-                return currDir.parameters[number]
-            currDir = currDir.parent
-        return None
         
     def get_variable(self, identifier):
         currDir = self
@@ -92,14 +66,6 @@ class procedureDirectory:
                 return currDir.variables[identifier]
             currDir = currDir.parent
         return None
-        
-    def add_parameter(self, number, identifier, variableType, variableClass = "variable"):
-        if identifier in self.parameters:
-            print "Error! Parameter \"{}\" already exists in current scope as \"{}\"!".format(std(number), str(identifier), str(self.parameters[number]))
-            return False
-        else:
-            self.parameters[number] = Parameter(number, identifier, variableType, self.next_address(variableClass, variableType))
-            return True
             
     def add_variable(self, identifier, variableType, variableClass = "variable"):
         if identifier in self.variables:
@@ -109,15 +75,19 @@ class procedureDirectory:
             self.variables[identifier] = Variable(identifier, variableType, self.next_address(variableClass, variableType))
             return True
     
-    def add_temp(self, variableType, variableClass = "temporal"):
+    def add_temp(self, variableType):
+        variableClass = "temporal"
         identifier = "temp_{}_{}".format(str(variableType), self.nextTemporal + 1)
+        self.nextTemporal = self.nextTemporal + 1
         if self.add_variable(identifier, variableType, variableClass):
             return self.variables[identifier]
         else:
             return False
         
-    def add_const(self, variableType, variableValue, variableClass = "constant"):
+    def add_const(self, variableType, variableValue):
+        variableClass = "constant"
         identifier = "const_{}_{}".format(str(variableType), self.nextConstant + 1)
+        self.nextConstant = self.nextConstant + 1
         if self.add_variable(identifier, variableType, variableClass):
             self.constants[identifier] = variableValue
             return self.variables[identifier]
@@ -165,14 +135,7 @@ class procedureDirectory:
                 return "{}_{}".format(str(variableClass), str(variableType), str(self.nextConstString))
             if variableType is bool:
                 self.nextConstBool+=1
-                return "{}_{}".format(str(variableClass), str(variableType), str(self.nextConstBool))
-    
-    def rem_parameter(self, number):
-        if number in self.parameters:
-            del self.parameters[number]
-            return True
-        else:
-            return False    
+                return "{}_{}".format(str(variableClass), str(variableType), str(self.nextConstBool)) 
             
     def rem_variable(self, identifier):
         if identifier in self.variables:
@@ -180,18 +143,6 @@ class procedureDirectory:
             return True
         else:
             return False
-
-    def list_all_parameters(self):
-        currDirr = self
-        string = ""
-        while(currDirr):
-            string = string + str(currDirr.number) + "{\n"
-            if(currDirr.parameters):
-                for number in currDirr.parameters:
-                    string = string + str(currDirr.parameters[number]) + "\n"
-            string = string + "}\n"
-            currDirr = currDirr.parent
-        return string
     
     def list_all_variables(self):
         currDirr = self
