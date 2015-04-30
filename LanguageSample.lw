@@ -13,17 +13,16 @@ program Example
     function myFunction2(int s, int y)
         var x : string;
         {
-            myFunction(s);
             print(2*s > 4, x, 2+y);
         }
     end
         
     function myFunction3()
         var u : float;
-        {
-            u = 5.2;
-            print(u);
-        }
+        for(u = 5; u > 0; u = u - 1)
+            {
+                print(u);
+            }
     end
     
     {
