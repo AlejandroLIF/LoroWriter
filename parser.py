@@ -12,7 +12,7 @@ instructions = quadrupleGenerator()
 variableStack = []
 seenType = None
 parameterCounter = 0 
-FuncVarName = None
+Function_Or_Var_Name = None
 
 precedence =    (
                 ('left', 'AND', 'OR'),
@@ -118,16 +118,17 @@ def p_statements(p):
                     | empty'''
 
 def p_statement(p):
-    '''statement    : ID seen_id_ass_or_fun assignOrFunccall
+    '''statement    : ID seen_id_assign_or_func assignOrFunccall
                     | instruction
                     | condition
                     | loop
                     | print'''
 
-def p_seen_id_ass_or_fun(p):
-    '''seen_id_ass_or_fun : '''
-    global FuncVarName
-    FuncVarName = p[-1]
+def p_seen_id_assign_or_func(p):
+    '''seen_id_assign_or_func : '''
+    global Function_Or_Var_Name
+    Function_Or_Var_Name = p[-1]
+   
    
 def p_assignOrFunccall(p):
     '''assignOrFunccall : assignment
@@ -136,46 +137,50 @@ def p_assignOrFunccall(p):
 def p_assignment(p):
     '''assignment   : EQU seen_EQU ssuperexp'''
     global instructions, currentDirectory
+    
     op1 = instructions.popOperand()
     result = instructions.popOperand()
     operator = instructions.popOperator()
    
-    validType = getResultingType(operator,result.Type,op1.Type)
+    validType = getResultingType(operator, result.Type, op1.Type)
     if validType:
         instructions.generateQuadruple(operator, op1, 0, result)
     else:
-        raise TypeError("Cannot store {} in variable {}".format(currentDirectory.get_variable(op1.Name), currentDirectory.get_variable(result.Name)))
+        print "ERROR: Invalid types! Variable \"{}\" cannot store \"{}\"!".format(currentDirectory.get_variable(result.Name), currentDirectory.get_variable(op1.Name))
+        raise SystemExit
 
 def p_seen_EQU(p):
     '''seen_EQU :'''
-    global instructions, currentDirectory, FuncVarName
-    variable = currentDirectory.get_variable(FuncVarName)
+    global instructions, currentDirectory, Function_Or_Var_Name
+    variable = currentDirectory.get_variable(Function_Or_Var_Name)
 
     if variable:
         instructions.pushOperand(variable)
         instructions.pushOperator(p[-1])
     else:
-        p_error(p)
-        #WARNING: Change error type
-        raise TypeError("Variable \"{}\" undeclared!".format(FuncVarName))
+        print "ERROR: Variable \"{}\" undeclared!".format(Function_Or_Var_Name)
+        raise SystemExit
 
 def p_functionCall(p):
-    '''functionCall : LPAREN seen_func_id args RPAREN'''
+    '''functionCall : seen_func_id LPAREN args RPAREN'''
     global instruction, currentDirectory, functionDirectory, parameterCounter
     if len(functionDirectory.parameters) == parameterCounter:
         instructions.generateQuadruple("GOTO",0,0,functionDirectory.startAddress)
     else:
-        #WARNING: Wrong number of arguments error
-        raise TypeError("Sent {} arguments, expected {}".format(parameterCounter,functionDirectory.parameters.len()))
+        print "ERROR: Function \"{}\" received {} arguments, expected {}!".format(functionDirectory.identifier, parameterCounter,len(functionDirectory.parameters))
+        raise SystemExit
                 
 def p_seen_func_id(p):
     '''seen_func_id : '''
-    global currentDirectory, functionDirectory, FuncVarName, parameterCounter
-    functionDirectory = currentDirectory.get_directory(FuncVarName)
+    global currentDirectory, functionDirectory, Function_Or_Var_Name, parameterCounter
+    functionDirectory = currentDirectory.get_directory(Function_Or_Var_Name)
     parameterCounter = 0
-
+    instructions.generateQuadruple("ERA", 0, 0, 0);
+    
     if not functionDirectory:
-        raise TypeError("Undeclared function")
+        #TODO: line number
+        print "ERROR: Undeclared function: \"{}\" in line #line number#".format(Function_Or_Var_Name)
+        raise SystemExit
 
 def p_args(p):
     '''args     : arg
@@ -188,15 +193,19 @@ def p_seen_operand(p):
     '''seen_operand : '''
     global instructions,currentDirectory,functionDirectory,parameterCounter
     op1 = instructions.popOperand()
-    nextParam = functionDirectory.parameters[parameterCounter]
 
-    if parameterCounter <= len(functionDirectory.parameters):
-        if functionDirectory.get_variable(nextParam).Type is op1.Type:
-            instructions.generateQuadruple("=",op1,0,functionDirectory.get_variable(nextParam))
+    if parameterCounter < len(functionDirectory.parameters):
+        nextParam = functionDirectory.parameters[parameterCounter]    
+        variable = functionDirectory.get_variable(nextParam)
+        compatibleType = getResultingType("=", variable.Type, op1.Type)
+        if variable.Type is compatibleType:
+            instructions.generateQuadruple("=", op1, 0, variable)
         else:
-            raise TypeError("Incompatible types. Is {}, expected {}".format(op1.Type,functionDirectory.get_variable(nextParam)))
+            print "ERROR: Incompatible arguments. Received \"{}\", expected \"{}\"!".format(op1.Type,functionDirectory.get_variable(nextParam))
+            raise SystemExit
     else:
-        raise TypeError("Sent more arguments than expected")
+        print "ERROR: Function \"{}\" received more arguments than expected!".format(functionDirectory.identifier)
+        raise SystemExit
     parameterCounter += 1
     
 def p_more_arg(p):
@@ -267,7 +276,7 @@ def p_movement(p):
                 | RIGHT
                 | LEFT'''
     global instructions
-    operator = {'FORWARD' : 'F', 'BACKWARD' : 'B', 'RIGHT' : 'R', 'LEFT' : 'L'}[p[1]]
+    operator = {'forward' : 'FWD', 'backward' : 'BWD', 'right' : 'RHT', 'left' : 'LFT'}[p[1]]
     instructions.pushOperator(operator)
     
 def p_operand(p):
@@ -308,7 +317,7 @@ def p_integer(p):
         op1 = currentDirectory.add_const(int, p[1])
     
     if op1:
-        instructions.pushOperand(op)
+        instructions.pushOperand(op1)
     else:
         print "INTEGER ERROR"
 
@@ -341,9 +350,8 @@ def p_seen_condition(p):
         instructions.generateQuadruple("GOTOF", condition, 0, 0)
         instructions.pushJumpStack(instructions.nextInstruction - 1)
     else:
-        p_error(p)
-        print condition
-        raise TypeError("Expected type: bool")
+        print "ERROR: Expected conditional, but found {}!".format(condition.Type)
+        raise SystemExit
 
 def p_seen_condition_block(p):
     '''seen_condition_block :'''
@@ -378,6 +386,7 @@ def p_seen_assignments1(p):
     '''seen_assignments1    :'''
     global instructions
     instructions.pushJumpStack(instructions.nextInstruction)
+    #Begin loop condition evaluation
 
 def p_seen_for_ssuperexp(p):
     '''seen_for_ssuperexp    :'''
@@ -388,24 +397,29 @@ def p_seen_for_ssuperexp(p):
         pendingJump = instructions.popJumpStack()
         instructions.generateQuadruple("GOTOF", condition, 0, 0)
         instructions.pushJumpStack(instructions.nextInstruction - 1)
-        instructions.pushJumpStack(instructions.nextInstruction + 1)
+        #Pending: exit jump address
+        
         instructions.generateQuadruple("GOTO", 0, 0, 0)
+        instructions.pushJumpStack(instructions.nextInstruction)
         instructions.pushJumpStack(instructions.nextInstruction - 1)
+        #Pending: loop start jump address
+        
         instructions.pushJumpStack(pendingJump)
 
     else:
-        p_error(p)
-        raise TypeError("Expected type: bool")
+        print "ERROR: Expected type: bool!"
+        raise SystemExit
     
-    
-
 def p_seen_assignments2(p):
     '''seen_assignments2    :'''
     global instructions
     pendingJump = instructions.popJumpStack()
     instructions.generateQuadruple("GOTO", 0, 0, pendingJump)
+    #After assigning, jump to condition evaluation
+    
     pendingJump = instructions.popJumpStack()
     instructions.setQuadrupleResult(pendingJump, instructions.nextInstruction)
+    #Loop start jump address is right after assigning, where the loop header ends.
 
 def p_seen_while_LPAREN(p):
     '''seen_while_LPAREN    :'''
@@ -418,16 +432,16 @@ def p_seen_while_ssuperexp(p):
     condition = instructions.popOperand()
     
     if condition.Type is not bool:
-        p_error(p)
-        raise TypeError("Expected type: bool")
+        print "ERROR: Expected type: bool!"
+        raise SystemExit
     
     pendingJump = instructions.popJumpStack()
-    instructions.generateQuadruple("GOTOF", 0, 0, 0)
+    instructions.generateQuadruple("GOTOF", condition, 0, 0)
     instructions.pushJumpStack(instructions.nextInstruction - 1)
     instructions.pushJumpStack(pendingJump)
 
 def p_assignments(p):
-    '''assignments  : ID seen_id_ass_or_fun assignment more_assignments'''
+    '''assignments  : ID seen_id_assign_or_func assignment more_assignments'''
 
 def p_more_assignments(p):
     '''more_assignments : COMMA assignments
@@ -474,8 +488,8 @@ def p_superexp(p):
         
         resultingType = getResultingType(operator, op1.Type, op2.Type)
         if resultingType is None:
-            p_error(p)
-            raise TypeError("Type operation {} {} {} is incompatible".format(op1.Name, operator, op2.Name))
+            print "ERROR: Operation {} {} {} has incompatible types".format(op1.Name, operator, op2.Name)
+            raise SystemExit
     
         result = currentDirectory.add_temp(resultingType)
         
@@ -491,7 +505,7 @@ def p_compareto(p):
                     | empty'''
 
 def p_seen_exp(p):
-    '''seen_exp :'''
+    '''seen_exp     :'''
     global instructions
     op2 = instructions.popOperand()
     op1 = instructions.popOperand()
@@ -499,8 +513,8 @@ def p_seen_exp(p):
     
     resultingType = getResultingType(operator, op1.Type, op2.Type)
     if resultingType is None:
-        p_error(p)
-        raise TypeError("Type operation {} {} {} is incompatible".format(op1.Name, operator, op2.Name))
+        print "ERROR: Operation {} {} {} has incompatible types".format(op1.Name, operator, op2.Name)
+        raise SystemExit
     
     result = currentDirectory.add_temp(resultingType)
         
@@ -533,8 +547,8 @@ def p_seen_term(p):
         
         resultingType = getResultingType(operator, op1.Type, op2.Type)
         if resultingType is None:
-            p_error(p)
-            raise TypeError("Type operation {} {} {} is incompatible".format(op1.Name, operator, op2.Name))
+            print "ERROR: Operation {} {} {} has incompatible types".format(op1.Name, operator, op2.Name)
+            raise SystemExit
         
         result = currentDirectory.add_temp(resultingType)
         
@@ -579,8 +593,8 @@ def p_factor(p):
         resultingType = getResultingType(operator, op1.Type, op2.Type)
 
         if resultingType is None:
-            p_error(p)
-            raise TypeError("Type operation {} {} {} is incompatible".format(op1.Name, operator, op2.Name))
+            print "ERROR: Operation {} {} {} has incompatible types".format(op1.Name, operator, op2.Name)
+            raise SystemExit
         
         result = currentDirectory.add_temp(resultingType)
         
@@ -598,18 +612,19 @@ def p_seen_LPAREN(p):
 def p_seen_RPAREN(p):
     '''seen_RPAREN  :'''
     global instructions
-    instructions.popOperand()
+    instructions.popOperator()
 
 def p_empty(p):
     'empty :'
     pass
 
-#   TODO
-def p_error(p):
-    '''error    :'''
-    global instructions, currentDirectory
-    #print currentDirectory
-    #print instructions
+
+#   TODO:
+#def p_error(p):
+#    '''error    :'''
+#    global instructions, currentDirectory
+#    #print currentDirectory
+#    #print instructions
 
 #Test routine
 if __name__ == '__main__':
