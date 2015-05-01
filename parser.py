@@ -57,7 +57,7 @@ def p_functionDec(p):
     '''functionDec  : FUNCTION ID seen_function_id LPAREN params RPAREN vars block END'''
     global currentDirectory
     currentDirectory = currentDirectory.parent
-    instructions.generateQuadruple("GOTO",0,0,0)
+    instructions.generateQuadruple("RETURN",0,0,0)
     instructions.pushJumpStack(instructions.nextInstruction - 1)
     
 def p_seen_function_id(p):
@@ -187,10 +187,10 @@ def p_args(p):
                 | empty'''
 
 def p_arg(p):
-    '''arg      : operand seen_operand more_arg'''
+    '''arg      : exp seen_arg more_arg'''
     
-def p_seen_operand(p):
-    '''seen_operand : '''
+def p_seen_arg(p):
+    '''seen_arg : '''
     global instructions,currentDirectory,functionDirectory,parameterCounter
     op1 = instructions.popOperand()
 
