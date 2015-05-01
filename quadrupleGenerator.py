@@ -21,12 +21,16 @@ class quadrupleGenerator:
         self.operatorStack = []
         self.operandStack = []
         self.nextInstruction = 0
+
+        #Generate the "jump to main" quadruple
+        self.generateQuadruple("GOTO", 0, 0, 0)
+        self.pushJumpStack(0)
     
     def __str__(self):
         string = 'quadruples:\n'
         
         for index, quadruple in enumerate(self.quadruples):
-            string += '\t{} {}\n'.format(str(index), str(quadruple))
+            string += '\t{}\t{}\n'.format(str(index), str(quadruple))
             
         string += 'operatorStack:\n{}\n'.format(str(self.operatorStack))
         
