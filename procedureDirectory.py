@@ -97,7 +97,7 @@ class procedureDirectory:
     #TODO:  This function returns the next-available memory location that may store a variable of type variableType
     #       it is a prototype placeholder and must be updated once the virtual machine's memory structure is defined.
     def next_address(self, variableClass, variableType):
-        if variableClass is "variable":
+        if variableClass == "variable":
             if variableType is int:
                 self.nextVarInt+=1
                 return "{}_{}".format(str(variableClass), str(variableType), str(self.nextVarInt))
@@ -110,7 +110,7 @@ class procedureDirectory:
             if variableType is bool:
                 self.nextVarBool+=1
                 return "{}_{}".format(str(variableClass), str(variableType), str(self.nextVarBool))
-        if variableClass is "temporal":
+        if variableClass == "temporal":
             if variableType is int:
                 self.nextTempInt+=1
                 return "{}_{}".format(str(variableClass), str(variableType), str(self.nextTempInt))
@@ -123,7 +123,7 @@ class procedureDirectory:
             if variableType is bool:
                 self.nextTempBool+=1
                 return "{}_{}".format(str(variableClass), str(variableType), str(self.nextTempBool))
-        if variableClass is "constant":
+        if variableClass == "constant":
             if variableType is int:
                 self.nextConstInt+=1
                 return "{}_{}".format(str(variableClass), str(variableType), str(self.nextConstInt))
