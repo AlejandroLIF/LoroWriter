@@ -11,7 +11,8 @@ def getResultingType(operator, op1, op2):
                                                 '>='    : bool,
                                                 '!='    : bool,
                                                 '&&'    : None,
-                                                '||'    : None
+                                                '||'    : None,
+                                                '='     : int
                                             },
                                             
                                     float   : {
@@ -25,7 +26,8 @@ def getResultingType(operator, op1, op2):
                                                 '>='    : bool,
                                                 '!='    : bool,
                                                 '&&'    : None,
-                                                '||'    : None
+                                                '||'    : None,
+                                                '='     : None
                                             },
                                             
                                     str     : {
@@ -39,7 +41,8 @@ def getResultingType(operator, op1, op2):
                                                 '>='    : None,
                                                 '!='    : None,
                                                 '&&'    : None,
-                                                '||'    : None 
+                                                '||'    : None,
+                                                '='     : None
                                             },
                                     
                                     bool    : {
@@ -53,7 +56,8 @@ def getResultingType(operator, op1, op2):
                                                 '>='    : None,
                                                 '!='    : None,
                                                 '&&'    : None,
-                                                '||'    : None
+                                                '||'    : None,
+                                                '='     : None
                                             }
                                 },
                                 
@@ -69,7 +73,8 @@ def getResultingType(operator, op1, op2):
                                                 '>='    : bool,
                                                 '!='    : bool,
                                                 '&&'    : None,
-                                                '||'    : None
+                                                '||'    : None,
+                                                '='     : float
                                             },
                                             
                                     float   : {
@@ -83,7 +88,8 @@ def getResultingType(operator, op1, op2):
                                                 '>='    : bool,
                                                 '!='    : bool,
                                                 '&&'    : None,
-                                                '||'    : None
+                                                '||'    : None,
+                                                '='     : float
                                             },
                                             
                                     str     : {
@@ -97,7 +103,8 @@ def getResultingType(operator, op1, op2):
                                                 '>='    : None,
                                                 '!='    : None,
                                                 '&&'    : None,
-                                                '||'    : None 
+                                                '||'    : None,
+                                                '='     : None
                                             },
                                     
                                     bool    : {
@@ -111,7 +118,8 @@ def getResultingType(operator, op1, op2):
                                                 '>='    : None,
                                                 '!='    : None,
                                                 '&&'    : None,
-                                                '||'    : None
+                                                '||'    : None,
+                                                '='     : None
                                             }
                                 },
                                 
@@ -127,7 +135,8 @@ def getResultingType(operator, op1, op2):
                                                 '>='    : None,
                                                 '!='    : None,
                                                 '&&'    : None,
-                                                '||'    : None 
+                                                '||'    : None,
+                                                '='     : str 
                                             },
                                             
                                     float   : {
@@ -141,7 +150,8 @@ def getResultingType(operator, op1, op2):
                                                 '>='    : None,
                                                 '!='    : None,
                                                 '&&'    : None,
-                                                '||'    : None 
+                                                '||'    : None,
+                                                '='     : str
                                             },
                                             
                                     str     : {
@@ -155,7 +165,8 @@ def getResultingType(operator, op1, op2):
                                                 '>='    : None,
                                                 '!='    : None,
                                                 '&&'    : None,
-                                                '||'    : None 
+                                                '||'    : None,
+                                                '='     : str
                                             },
                                     
                                     bool    : {
@@ -169,7 +180,8 @@ def getResultingType(operator, op1, op2):
                                                 '>='    : None,
                                                 '!='    : None,
                                                 '&&'    : None,
-                                                '||'    : None 
+                                                '||'    : None,
+                                                '='     : str
                                             }
                                 },
                         
@@ -185,7 +197,8 @@ def getResultingType(operator, op1, op2):
                                                 '>='    : None,
                                                 '!='    : None,
                                                 '&&'    : None,
-                                                '||'    : None
+                                                '||'    : None,
+                                                '='     : None
                                             },
                                             
                                     float   : {
@@ -199,7 +212,8 @@ def getResultingType(operator, op1, op2):
                                                 '>='    : None,
                                                 '!='    : None,
                                                 '&&'    : None,
-                                                '||'    : None
+                                                '||'    : None,
+                                                '='     : None
                                             },
                                             
                                     str     : {
@@ -213,7 +227,8 @@ def getResultingType(operator, op1, op2):
                                                 '>='    : None,
                                                 '!='    : None,
                                                 '&&'    : None,
-                                                '||'    : None
+                                                '||'    : None,
+                                                '='     : None
                                             },
                                     
                                     bool    : {
@@ -227,14 +242,15 @@ def getResultingType(operator, op1, op2):
                                                 '>='    : None,
                                                 '!='    : None,
                                                 '&&'    : bool,
-                                                '||'    : bool
+                                                '||'    : bool,
+                                                '='     : bool
                                             }
                                 }
                     }
     try:
         return semanticCube[op1][op2][operator]
     except KeyError:
-        print "WARNING! KeyError in getResultingType: semanticCube[{}][{}][{}]".format(op1, op2, operator)
+        raise KeyError("WARNING! KeyError in getResultingType: semanticCube[{}][{}][{}]".format(op1, op2, operator))
         return None
     
 #Test routine
