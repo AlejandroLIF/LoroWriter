@@ -11,28 +11,26 @@ class Variable:
 
 #Begin class procedureDirectory
 class procedureDirectory:
+    constants = {}     #stores the value of constants
+
     def __init__(self, identifier, parent=None):
         self.identifier = identifier    #directory identifier
         self.parent = parent    #pointer to the directory's parent
         self.parameters = []    #current directory's parameter table
         self.variables = {}     #current directory's variable table
         self.directories = {}   #current directory's children
-        self.nextVarInt = 0      #used in calculating the next available memory address vor an added variable
-        self.nextVarFloat = 2000      #used in calculating the next available memory address vor an added variable
-        self.nextVarString = 4000      #used in calculating the next available memory address vor an added variable
-        self.nextVarBool = 6000      #used in calculating the next available memory address vor an added variable
-        self.nextTempInt = 8000      #used in calculating the next available memory address vor an added variable
-        self.nextTempFloat = 10000      #used in calculating the next available memory address vor an added variable
-        self.nextTempString = 12000      #used in calculating the next available memory address vor an added variable
-        self.nextTempBool = 14000      #used in calculating the next available memory address vor an added variable
-        self.nextConstInt = 16000      #used in calculating the next available memory address vor an added variable
-        self.nextConstFloat = 18000      #used in calculating the next available memory address vor an added variable
-        self.nextConstString = 20000      #used in calculating the next available memory address vor an added variable
-        self.nextConstBool = 22000      #used in calculating the next available memory address vor an added variable
-        self.nextConstant = 0
-        self.nextTemporal = 0
-        self.startAddress = 0   #function start address
-        self.constants = {}     #stores the value of constants
+        
+        #Note: next_address works with preincrement, so variables start one index below specificacion
+        if parent:
+            self.nextVarAddress = 49
+            self.nextTempAddress = 2049
+        else:
+            self.nextVarAddress = 1999
+            self.nextTempAddress = 4999
+        
+        #Note: zero-const is zero
+        self.nextConst = 0
+        self.add_const(int, 0)
     
     def __str__(self):
         return self.to_string()
@@ -46,8 +44,9 @@ class procedureDirectory:
                 string = string + str(self.variables[identifier])
                 #Append the constant value to constant variables
                 try:
-                    string = string + " := " + str(self.constants[identifier])
+                    string = string + " := " + str(procedureDirectory.constants[identifier])
                 except KeyError:
+                    print "warning: constant key error"
                     pass
                 string = string + "\n"
         
@@ -72,70 +71,53 @@ class procedureDirectory:
             print "Error! Variable \"{}\" already exists in current scope as \"{}\"!".format(str(identifier), str(self.variables[identifier]))
             return False
         else:
-            self.variables[identifier] = Variable(identifier, variableType, self.next_address(variableClass, variableType))
+            self.variables[identifier] = Variable(identifier, variableType, self.next_address(variableClass))
             return True
     
     def add_temp(self, variableType):
         variableClass = "temporal"
-        identifier = "temp_{}_{}".format(str(variableType), self.nextTemporal + 1)
-        self.nextTemporal = self.nextTemporal + 1
+        identifier = "temp_{}_{}".format(str(variableType), self.nextTempAddress)
         if self.add_variable(identifier, variableType, variableClass):
-            return self.variables[identifier]
+            return self.get_variable(identifier)
         else:
             return False
         
     def add_const(self, variableType, variableValue):
+        """ Adds a constant to the Procedure Directory.
+        Constants are always added to the global Procedure Directory.
+        
+        Return: "Variable" referencing the constant value, or false if an error occurred.
+        """
         variableClass = "constant"
-        identifier = "const_{}_{}".format(str(variableType), self.nextConstant + 1)
-        self.nextConstant = self.nextConstant + 1
-        if self.add_variable(identifier, variableType, variableClass):
-            self.constants[identifier] = variableValue
-            return self.variables[identifier]
-        else:
-            return False
+        
+        identifier = str(variableValue)
+        #if the constant already exists, return
+        if self.get_variable(identifier):
+            return self.get_variable(identifier)
+        
+        #else:
+        #find global directory
+        currDir = self
+        while currDir.parent:
+            currDir = currDir.parent
+        #currDir is now the global directory
+        #add constant to the global directory
+        if currDir.add_variable(identifier, variableType, variableClass):
+            procedureDirectory.constants[identifier] = variableValue
+            return self.get_variable(identifier)
     
     #TODO:  This function returns the next-available memory location that may store a variable of type variableType
     #       it is a prototype placeholder and must be updated once the virtual machine's memory structure is defined.
-    def next_address(self, variableClass, variableType):
+    def next_address(self, variableClass):
         if variableClass == "variable":
-            if variableType is int:
-                self.nextVarInt+=1
-                return "{}_{}".format(str(variableClass), str(variableType), str(self.nextVarInt))
-            if variableType is float:
-                self.nextVarFloat+=1
-                return "{}_{}".format(str(variableClass), str(variableType), str(self.nextVarFloat))
-            if variableType is str:
-                self.nextVarString+=1
-                return "{}_{}".format(str(variableClass), str(variableType), str(self.nextVarString))
-            if variableType is bool:
-                self.nextVarBool+=1
-                return "{}_{}".format(str(variableClass), str(variableType), str(self.nextVarBool))
+            self.nextVarAddress += 1
+            return self.nextVarAddress
         if variableClass == "temporal":
-            if variableType is int:
-                self.nextTempInt+=1
-                return "{}_{}".format(str(variableClass), str(variableType), str(self.nextTempInt))
-            if variableType is float:
-                self.nextTempFloat+=1
-                return "{}_{}".format(str(variableClass), str(variableType), str(self.nextTempFloat))
-            if variableType is str:
-                self.nextTempString+=1
-                return "{}_{}".format(str(variableClass), str(variableType), str(self.nextTempString))
-            if variableType is bool:
-                self.nextTempBool+=1
-                return "{}_{}".format(str(variableClass), str(variableType), str(self.nextTempBool))
+            self.nextTempAddress += 1
+            return self.nextTempAddress
         if variableClass == "constant":
-            if variableType is int:
-                self.nextConstInt+=1
-                return "{}_{}".format(str(variableClass), str(variableType), str(self.nextConstInt))
-            if variableType is float:
-                self.nextConstFloat+=1
-                return "{}_{}".format(str(variableClass), str(variableType), str(self.nextConstFloat))
-            if variableType is str:
-                self.nextConstString+=1
-                return "{}_{}".format(str(variableClass), str(variableType), str(self.nextConstString))
-            if variableType is bool:
-                self.nextConstBool+=1
-                return "{}_{}".format(str(variableClass), str(variableType), str(self.nextConstBool)) 
+            self.nextConst += 1
+            return self.nextConst
             
     def rem_variable(self, identifier):
         if identifier in self.variables:
@@ -157,10 +139,12 @@ class procedureDirectory:
         return string
     
     def get_directory(self, identifier):
-        if identifier in self.directories:
-            return self.directories[identifier]
-        else:
-            return None
+        currDir = self
+        while currDir:
+            if identifier in currDir.directories:
+                return currDir.directories[identifier]
+            currDir = currDir.parent
+        return None
             
     def add_directory(self, identifier):
         if identifier in self.directories:
