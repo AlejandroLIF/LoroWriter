@@ -2,6 +2,8 @@ from procedureDirectory import Variable
 
 #Begin class quadruple
 class quadruple:
+    printFormat = "Addresses"
+    
     def __init__(self, operator='', op1='', op2='', result=''):
         self.operator = operator
         self.op1 = op1
@@ -9,8 +11,12 @@ class quadruple:
         self.result = result
         
     def __str__(self):
-        return str(self.operator) + '\t' + str(self.op1.Name) + '\t' + str(self.op2.Name) + \
-                '\t' + str(self.result.Name)
+        if quadruple.printFormat == "Name":
+            return str(self.operator) + '\t' + str(self.op1.Name) + '\t' + str(self.op2.Name) + \
+                    '\t' + str(self.result.Name)
+        else:
+            return str(self.operator) + '\t' + str(self.op1.Address) + '\t' + str(self.op2.Address) + \
+                    '\t' + str(self.result.Address)
 #End class quadruple
 
 #Begin class quadrupleGenerator
@@ -69,22 +75,20 @@ class quadrupleGenerator:
             return False
             
     #   If an integer is passed as op1, op2 or result, it is converted into a Variable type
-    #TODO: properly assign a variable address to this Variable.
     def generateQuadruple(self, operator='', op1='', op2='', result=''):
         if type(op1) is int:
-            op1 = Variable(str(op1))
+            op1 = Variable(Name=str(op1), Address=op1)
         if type(op2) is int:
-            op2 = Variable(str(op2))
+            op2 = Variable(Name=str(op2), Address=op2)
         if type(result) is int:
-            result = Variable(str(result))
+            result = Variable(Name=str(result), Address=result)
         self.quadruples.append(quadruple(operator, op1, op2, result))
         self.nextInstruction += 1
        
     #   If an integer is passed as result, it is converted into a Variable type
-    #TODO: properly assign a variable address to this Variable.
     def setQuadrupleResult(self, index, result):
         if type(result) is int:
-            result = Variable(str(result))
+            result = Variable(Name=str(result), Address=result)
         self.quadruples[index].result = result
 #End class quadrupleGenerator
 
