@@ -1,7 +1,7 @@
 import sys
 import ply.yacc as yacc
 from lexer import tokens
-from procedureDirectory import procedureDirectory
+from procedureDirectory import procedureDirectory, Variable
 from quadrupleGenerator import quadrupleGenerator
 from semanticCube import getResultingType
 
@@ -13,6 +13,7 @@ variableStack = []
 seenType = None
 parameterCounter = 0 
 Function_Or_Var_Name = None
+functionCall = False
 
 precedence =    (
                 ('left', 'AND', 'OR'),
@@ -54,18 +55,24 @@ def p_functionDecs(p):
                     | empty'''
 
 def p_functionDec(p):
-    '''functionDec  : FUNCTION ID seen_function_id LPAREN params RPAREN vars block END'''
-    global currentDirectory
-    currentDirectory = currentDirectory.parent
+    '''functionDec  : type FUNCTION ID seen_function_id LPAREN params RPAREN vars seen_vars block END'''
+    global currentDirectory        
     instructions.generateQuadruple("RETURN",0,0,0)
-    instructions.pushJumpStack(instructions.nextInstruction - 1)
+    currentDirectory = currentDirectory.parent
+    #instructions.pushJumpStack(instructions.nextInstruction - 1)
     
+def p_seen_vars(p):
+    '''seen_vars    :'''
+    global currentDirectory, instructions
+    currentDirectory.startAddress = instructions.nextInstruction
+
 def p_seen_function_id(p):
     '''seen_function_id :'''
     global currentDirectory
     functionID = p[-1]
     currentDirectory.add_directory(functionID)
     currentDirectory = currentDirectory.get_directory(functionID)
+    currentDirectory.Type = seenType
 
 def p_params(p):
     '''params   : param
@@ -106,12 +113,7 @@ def p_type(p):
     seenType = variableTypes[p[1]]
 
 def p_block(p):
-    '''block    : LBRACE seen_address statements RBRACE'''
-
-def p_seen_address(p):
-    '''seen_address : '''
-    global currentDirectory, instructions
-    currentDirectory.startAddress = instructions.nextInstruction
+    '''block    : LBRACE statements RBRACE'''
 
 def p_statements(p):
     '''statements   : statement SEMICOLON statements
@@ -122,7 +124,22 @@ def p_statement(p):
                     | instruction
                     | condition
                     | loop
-                    | print'''
+                    | print
+                    | return'''
+    global functionCall
+    functionCall = False
+    
+def p_return(p):
+    '''return       : RETURN operand'''
+    global currentDirectory, instructions
+    var = instructions.popOperand()
+    compatibleType = getResultingType("=", currentDirectory.Type, var.Type)
+    
+    if compatibleType:
+        instructions.generateQuadruple("RETURN",var,0,0)
+    else:
+        print "ERROR: incompatible return types! Received {}, expected {}!".format(var.Type, currentDirectory.Type)
+        raise SystemExit
 
 def p_seen_id_assign_or_func(p):
     '''seen_id_assign_or_func : '''
@@ -163,25 +180,33 @@ def p_seen_EQU(p):
 
 def p_functionCall(p):
     '''functionCall : seen_func_id LPAREN args RPAREN'''
-    global instruction, currentDirectory, functionDirectory, parameterCounter
+    global instruction, currentDirectory, functionDirectory, parameterCounter, functionCall
     if len(functionDirectory.parameters) == parameterCounter:
-        instructions.generateQuadruple("GOTO",0,0,functionDirectory.startAddress)
+        instructions.generateQuadruple("CALL",0,0,functionDirectory.startAddress)
     else:
         print "ERROR: Function \"{}\" received {} arguments, expected {}!".format(functionDirectory.identifier, parameterCounter,len(functionDirectory.parameters))
         raise SystemExit
+    functionCall = True
                 
 def p_seen_func_id(p):
     '''seen_func_id : '''
     global currentDirectory, functionDirectory, Function_Or_Var_Name, parameterCounter
-    functionDirectory = currentDirectory.get_directory(Function_Or_Var_Name)
-    parameterCounter = 0
-    instructions.generateQuadruple("ERA", 0, 0, 0);
+    
+    #Function call as an operator
+    functionDirectory = currentDirectory.get_directory(p[-1])
     
     if not functionDirectory:
-        #TODO: line number
+        #Function call as a statement
+        functionDirectory = currentDirectory.get_directory(Function_Or_Var_Name)
+    
+    if not functionDirectory:
+        #TODO: feedback line number
         print "ERROR: Undeclared function: \"{}\" in line #line number#".format(Function_Or_Var_Name)
         raise SystemExit
-
+        
+    parameterCounter = 0
+    instructions.generateQuadruple("ERA", len(currentDirectory.variables), 0, 0);
+    
 def p_args(p):
     '''args     : arg
                 | empty'''
@@ -199,7 +224,8 @@ def p_seen_arg(p):
         variable = functionDirectory.get_variable(nextParam)
         compatibleType = getResultingType("=", variable.Type, op1.Type)
         if variable.Type is compatibleType:
-            instructions.generateQuadruple("=", op1, 0, variable)
+            #TODO: find a more elegant solution for the + 7000 magic number
+            instructions.generateQuadruple("=", op1, 0, Variable("Param{}".format(parameterCounter), variable.Type, parameterCounter + 7000))
         else:
             print "ERROR: Incompatible arguments. Received \"{}\", expected \"{}\"!".format(op1.Type,functionDirectory.get_variable(nextParam))
             raise SystemExit
@@ -283,22 +309,32 @@ def p_operand(p):
     '''operand  : INTEGER
                 | FLOAT
                 | STRING
-                | ID'''
+                | ID id_or_func'''
     global instructions, currentDirectory
+    
+    op1 = None
+    
     if type(p[1]) is str:
-        if p[1][0] != "\"":
-            op1 = currentDirectory.get_variable(p[1])
-        else:
-            varType = type(p[1])
-            op1 = currentDirectory.add_const(varType, p[1])    
+        if p[1][0] == "\"":
+            op1 = currentDirectory.add_const(str, p[1])
     else:
         varType = type(p[1])
         op1 = currentDirectory.add_const(varType, p[1])
-
-    if op1:    
+        
+    if op1:
         instructions.pushOperand(op1)
+    #else:
+    #    print op1, p[1], "OPERAND ERROR"
+    
+def p_id_or_func(p):
+    '''id_or_func   : functionCall
+                    | empty'''
+    global instructions
+    if functionCall:
+        variable = currentDirectory.get_directory(p[-1]).getReturnVariable()
     else:
-        print op1, p[1], "OPERAND ERROR"
+        variable = currentDirectory.get_variable(p[-1])
+    instructions.pushOperand(variable)
     
 def p_boolean(p):
     '''boolean  : TRUE
@@ -453,10 +489,8 @@ def p_print(p):
 def p_printables(p):
     '''printables   : printable more_printables'''
 
-#TODO: This has not been verified
 def p_printable(p):
-    '''printable    : ssuperexp
-                    | STRING'''
+    '''printable    : ssuperexp'''
     global instructions
     op1 = instructions.popOperand()
     instructions.generateQuadruple('PRINT', op1, 0, 0);
@@ -501,11 +535,11 @@ def p_superexp(p):
     
     
 def p_compareto(p):
-    '''compareto    : comparator exp seen_exp
+    '''compareto    : comparator exp seen_comparison
                     | empty'''
 
-def p_seen_exp(p):
-    '''seen_exp     :'''
+def p_seen_comparison(p):
+    '''seen_comparison     :'''
     global instructions
     op2 = instructions.popOperand()
     op1 = instructions.popOperand()
@@ -522,7 +556,7 @@ def p_seen_exp(p):
         instructions.generateQuadruple(operator, op1, op2, result)
         instructions.pushOperand(result)
     else:
-        print "SEEN_EXP ERROR"    
+        print "SEEN_COMPARISON ERROR"    
 
 def p_comparator(p):
     '''comparator   : CEQ
