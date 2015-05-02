@@ -1,49 +1,50 @@
 import ply.lex as lex
 
 reserved = {
-    'program'    : 'PROGRAM',
-    'var'        : 'VAR',
-    'function'    : 'FUNCTION',
+    'program'   : 'PROGRAM',
+    'var'       : 'VAR',
+    'function'  : 'FUNCTION',
+    'return'    : 'RETURN',
     
     'if'        : 'IF',
-    'else'        : 'ELSE',
+    'else'      : 'ELSE',
     
-    'while'        : 'WHILE',
-    'for'        : 'FOR',
+    'while'     : 'WHILE',
+    'for'       : 'FOR',
     
-    'end'        : 'END',
+    'end'       : 'END',
     
-    'print'        : 'PRINT',
+    'print'     : 'PRINT',
     
-    'forward'    : 'FORWARD',
-    'backward'    : 'BACKWARD',
-    'right'        : 'RIGHT',
-    'left'        : 'LEFT',
+    'forward'   : 'FORWARD',
+    'backward'  : 'BACKWARD',
+    'right'     : 'RIGHT',
+    'left'      : 'LEFT',
     
-    'draw'        : 'DRAW',
-    'arc'        : 'ARC',
+    'draw'      : 'DRAW',
+    'arc'       : 'ARC',
     'circle'    : 'CIRCLE',
     'square'    : 'SQUARE',
     
-    'pressure'    : 'PRESSURE',
-    'color'        : 'COLOR',
+    'pressure'  : 'PRESSURE',
+    'color'     : 'COLOR',
     
-    'true'        : 'TRUE',
-    'false'        : 'FALSE',
+    'true'      : 'TRUE',
+    'false'     : 'FALSE',
     
-    'red'        : 'RED',
+    'red'       : 'RED',
     'orange'    : 'ORANGE',
     'yellow'    : 'YELLOW',
-    'green'        : 'GREEN',
-    'blue'        : 'BLUE',
-    'cyan'        : 'CYAN',
+    'green'     : 'GREEN',
+    'blue'      : 'BLUE',
+    'cyan'      : 'CYAN',
     'purple'    : 'PURPLE',
-    'white'        : 'WHITE',
-    'black'        : 'BLACK',
+    'white'     : 'WHITE',
+    'black'     : 'BLACK',
     
     
-    'int'        : 'INT',
-    'float'        : 'FLO',
+    'int'       : 'INT',
+    'float'     : 'FLO',
     'string'    : 'STR'
 }
 
