@@ -12,18 +12,20 @@ class Variable:
 #Begin class procedureDirectory
 class procedureDirectory:
     constants = {}     #stores the value of constants
-
+    
     def __init__(self, identifier, parent=None):
         self.identifier = identifier    #directory identifier
         self.parent = parent    #pointer to the directory's parent
         self.parameters = []    #current directory's parameter table
         self.variables = {}     #current directory's variable table
         self.directories = {}   #current directory's children
+        self.Type = None
+        self.startAddress = 0   
         
         #Note: next_address works with preincrement, so variables start one index below specificacion
         if parent:
-            self.nextVarAddress = 49
-            self.nextTempAddress = 2049
+            self.nextVarAddress = 7049
+            self.nextTempAddress = 9049
         else:
             self.nextVarAddress = 1999
             self.nextTempAddress = 4999
@@ -57,6 +59,8 @@ class procedureDirectory:
         string = string + "}\n\n"
         return string
 
+    def getReturnVariable(self):
+        return Variable("retVar", self.Type, "retAddr")
         
     def get_variable(self, identifier):
         currDir = self
@@ -76,7 +80,7 @@ class procedureDirectory:
     
     def add_temp(self, variableType):
         variableClass = "temporal"
-        identifier = "temp_{}_{}".format(str(variableType), self.nextTempAddress)
+        identifier = "T{}".format(self.nextTempAddress)
         if self.add_variable(identifier, variableType, variableClass):
             return self.get_variable(identifier)
         else:
