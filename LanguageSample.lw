@@ -3,27 +3,34 @@ program Example
         c : float;
         d : string;
     
-    function myFunction(int n)
+    int function myFunction(int n)
         var a : string;
         {
             print(2*n > 4, a);
+            return 3;
         }
     end
     
-    function myFunction2(int s, int y)
+    float function myFunction2(int s, int y)
         var x : string;
         {
+            if(s > y){
+                return s;
+            }end;
+        
             print(2*s > 4, x, 2+y);
+            return y;
         }
     end
         
-    function myFunction3()
+    string function myFunction3()
         var u : int;
         {
         for(u = 5; u > 0; u = u - 1)
             {
                 myFunction2(u, 0 - 1);
             }end;
+        return "ok";
         }
     end
         
@@ -55,10 +62,9 @@ program Example
         }end;
         
         myFunction2(a,b);
-        b=2;
         
         myFunction3();
-        myFunction(b);
+        b = myFunction(b);
         a=3*b;
     }
     end
