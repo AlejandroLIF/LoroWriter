@@ -2,7 +2,7 @@ from procedureDirectory import Variable
 
 #Begin class quadruple
 class quadruple:
-    printFormat = "Addresses"
+    printFormat = "Names"
     
     def __init__(self, operator='', op1='', op2='', result=''):
         self.operator = operator
@@ -11,7 +11,7 @@ class quadruple:
         self.result = result
         
     def __str__(self):
-        if quadruple.printFormat == "Name":
+        if quadruple.printFormat == "Names":
             return str(self.operator) + '\t' + str(self.op1.Name) + '\t' + str(self.op2.Name) + \
                     '\t' + str(self.result.Name)
         else:
@@ -82,6 +82,7 @@ class quadrupleGenerator:
             op2 = Variable(Name=str(op2), Address=op2)
         if type(result) is int:
             result = Variable(Name=str(result), Address=result)
+            
         self.quadruples.append(quadruple(operator, op1, op2, result))
         self.nextInstruction += 1
        
