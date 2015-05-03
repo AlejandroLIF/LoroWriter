@@ -330,6 +330,8 @@ def p_id_or_func(p):
     '''id_or_func   : functionCall
                     | empty'''
     global instructions
+   
+   #TODO: set functionCall as false inside the if in line 337
     if functionCall:
         variable = currentDirectory.get_directory(p[-1]).getReturnVariable()
     else:
