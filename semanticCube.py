@@ -9,7 +9,8 @@ def getResultingType(operator, op1, op2):
                                                 '<='    : bool,
                                                 '>'     : bool,
                                                 '>='    : bool,
-                                                '!='    : bool,
+                                                '=='    : bool,
+                                                '<>'    : bool,
                                                 '&&'    : None,
                                                 '||'    : None,
                                                 '='     : int
@@ -24,7 +25,8 @@ def getResultingType(operator, op1, op2):
                                                 '<='    : bool,
                                                 '>'     : bool,
                                                 '>='    : bool,
-                                                '!='    : bool,
+                                                '=='    : bool,
+                                                '<>'    : bool,
                                                 '&&'    : None,
                                                 '||'    : None,
                                                 '='     : None
@@ -39,7 +41,8 @@ def getResultingType(operator, op1, op2):
                                                 '<='    : None,
                                                 '>'     : None,
                                                 '>='    : None,
-                                                '!='    : None,
+                                                '=='    : None,
+                                                '<>'    : None,
                                                 '&&'    : None,
                                                 '||'    : None,
                                                 '='     : None
@@ -54,7 +57,8 @@ def getResultingType(operator, op1, op2):
                                                 '<='    : None,
                                                 '>'     : None,
                                                 '>='    : None,
-                                                '!='    : None,
+                                                '<>'    : None,
+                                                '<>'    : None,
                                                 '&&'    : None,
                                                 '||'    : None,
                                                 '='     : None
@@ -71,7 +75,8 @@ def getResultingType(operator, op1, op2):
                                                 '<='    : bool,
                                                 '>'     : bool,
                                                 '>='    : bool,
-                                                '!='    : bool,
+                                                '=='    : bool,
+                                                '<>'    : bool,
                                                 '&&'    : None,
                                                 '||'    : None,
                                                 '='     : float
@@ -86,7 +91,8 @@ def getResultingType(operator, op1, op2):
                                                 '<='    : bool,
                                                 '>'     : bool,
                                                 '>='    : bool,
-                                                '!='    : bool,
+                                                '=='    : bool,
+                                                '<>'    : bool,
                                                 '&&'    : None,
                                                 '||'    : None,
                                                 '='     : float
@@ -101,7 +107,8 @@ def getResultingType(operator, op1, op2):
                                                 '<='    : None,
                                                 '>'     : None,
                                                 '>='    : None,
-                                                '!='    : None,
+                                                '=='    : None,
+                                                '<>'    : None,
                                                 '&&'    : None,
                                                 '||'    : None,
                                                 '='     : None
@@ -116,7 +123,8 @@ def getResultingType(operator, op1, op2):
                                                 '<='    : None,
                                                 '>'     : None,
                                                 '>='    : None,
-                                                '!='    : None,
+                                                '=='    : None,
+                                                '<>'    : None,
                                                 '&&'    : None,
                                                 '||'    : None,
                                                 '='     : None
@@ -133,7 +141,8 @@ def getResultingType(operator, op1, op2):
                                                 '<='    : None,
                                                 '>'     : None,
                                                 '>='    : None,
-                                                '!='    : None,
+                                                '=='    : None,
+                                                '<>'    : None,
                                                 '&&'    : None,
                                                 '||'    : None,
                                                 '='     : str 
@@ -148,7 +157,8 @@ def getResultingType(operator, op1, op2):
                                                 '<='    : None,
                                                 '>'     : None,
                                                 '>='    : None,
-                                                '!='    : None,
+                                                '<>'    : None,
+                                                '<>'    : None,
                                                 '&&'    : None,
                                                 '||'    : None,
                                                 '='     : str
@@ -163,7 +173,8 @@ def getResultingType(operator, op1, op2):
                                                 '<='    : None,
                                                 '>'     : None,
                                                 '>='    : None,
-                                                '!='    : None,
+                                                '=='    : bool,
+                                                '<>'    : bool,
                                                 '&&'    : None,
                                                 '||'    : None,
                                                 '='     : str
@@ -178,7 +189,8 @@ def getResultingType(operator, op1, op2):
                                                 '<='    : None,
                                                 '>'     : None,
                                                 '>='    : None,
-                                                '!='    : None,
+                                                '=='    : None,
+                                                '<>'    : None,
                                                 '&&'    : None,
                                                 '||'    : None,
                                                 '='     : str
@@ -195,7 +207,8 @@ def getResultingType(operator, op1, op2):
                                                 '<='    : None,
                                                 '>'     : None,
                                                 '>='    : None,
-                                                '!='    : None,
+                                                '=='    : None,
+                                                '<>'    : None,
                                                 '&&'    : None,
                                                 '||'    : None,
                                                 '='     : None
@@ -210,7 +223,8 @@ def getResultingType(operator, op1, op2):
                                                 '<='    : None,
                                                 '>'     : None,
                                                 '>='    : None,
-                                                '!='    : None,
+                                                '=='    : None,
+                                                '<>'    : None,
                                                 '&&'    : None,
                                                 '||'    : None,
                                                 '='     : None
@@ -225,7 +239,8 @@ def getResultingType(operator, op1, op2):
                                                 '<='    : None,
                                                 '>'     : None,
                                                 '>='    : None,
-                                                '!='    : None,
+                                                '=='    : None,
+                                                '<>'    : None,
                                                 '&&'    : None,
                                                 '||'    : None,
                                                 '='     : None
@@ -240,7 +255,8 @@ def getResultingType(operator, op1, op2):
                                                 '<='    : None,
                                                 '>'     : None,
                                                 '>='    : None,
-                                                '!='    : None,
+                                                '=='    : None,
+                                                '<>'    : None,
                                                 '&&'    : bool,
                                                 '||'    : bool,
                                                 '='     : bool
@@ -257,7 +273,7 @@ def getResultingType(operator, op1, op2):
 if __name__ == '__main__':
     op1 = [ int, float, str, bool ]
     op2 = [ int, float, str, bool ]
-    operator = [ '+', '-', '*', '/', '<', '<=', '>', '>=', '!=', '&&', '||' ]
+    operator = [ '+', '-', '*', '/', '<', '<=', '>', '>=', '==', '<>', '&&', '||', '=' ]
     
     for i in op1:
         for j in op2:
