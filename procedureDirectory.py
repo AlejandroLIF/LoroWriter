@@ -80,7 +80,7 @@ class procedureDirectory:
     
     def add_temp(self, variableType):
         variableClass = "temporal"
-        identifier = "T{}".format(self.nextTempAddress)
+        identifier = "T{}".format(self.nextTempAddress+1)
         if self.add_variable(identifier, variableType, variableClass):
             return self.get_variable(identifier)
         else:
