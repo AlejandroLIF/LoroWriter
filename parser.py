@@ -57,7 +57,7 @@ def p_functionDecs(p):
 def p_functionDec(p):
     '''functionDec  : type FUNCTION ID seen_function_id LPAREN params RPAREN vars seen_vars block END'''
     global currentDirectory        
-    instructions.generateQuadruple("RETURN",0,0,0)
+    instructions.generateQuadruple("RET",0,0,0)
     currentDirectory = currentDirectory.parent
     #instructions.pushJumpStack(instructions.nextInstruction - 1)
     
@@ -136,7 +136,7 @@ def p_return(p):
     compatibleType = getResultingType("=", currentDirectory.Type, var.Type)
     
     if compatibleType:
-        instructions.generateQuadruple("RETURN",var,0,0)
+        instructions.generateQuadruple("RET",var,0,0)
     else:
         print "ERROR: incompatible return types! Received {}, expected {}!".format(var.Type, currentDirectory.Type)
         raise SystemExit
@@ -161,6 +161,7 @@ def p_assignment(p):
    
     validType = getResultingType(operator, result.Type, op1.Type)
     if validType:
+        operator = 'EQU'
         instructions.generateQuadruple(operator, op1, 0, result)
     else:
         print "ERROR: Invalid types! Variable \"{}\" cannot store \"{}\"!".format(currentDirectory.get_variable(result.Name), currentDirectory.get_variable(op1.Name))
@@ -182,7 +183,7 @@ def p_functionCall(p):
     '''functionCall : seen_func_id LPAREN args RPAREN'''
     global instruction, currentDirectory, functionDirectory, parameterCounter, functionCall
     if len(functionDirectory.parameters) == parameterCounter:
-        instructions.generateQuadruple("CALL",0,0,functionDirectory.startAddress)
+        instructions.generateQuadruple("CAL",0,0,functionDirectory.startAddress)
     else:
         print "ERROR: Function \"{}\" received {} arguments, expected {}!".format(functionDirectory.identifier, parameterCounter,len(functionDirectory.parameters))
         raise SystemExit
@@ -225,7 +226,7 @@ def p_seen_arg(p):
         compatibleType = getResultingType("=", variable.Type, op1.Type)
         if variable.Type is compatibleType:
             #TODO: find a more elegant solution for the + 7000 magic number
-            instructions.generateQuadruple("=", op1, 0, Variable("Param{}".format(parameterCounter), variable.Type, parameterCounter + 7000))
+            instructions.generateQuadruple("EQU", op1, 0, Variable("Param{}".format(parameterCounter), variable.Type, parameterCounter + 7000))
         else:
             print "ERROR: Incompatible arguments. Received \"{}\", expected \"{}\"!".format(op1.Type,functionDirectory.get_variable(nextParam))
             raise SystemExit
@@ -260,13 +261,13 @@ def p_drawi(p):
     #NOTE:  special scenario because boolean is a keyword and not the result of logic evaluation
     #       in this case, op1 comes from the operators.  
     op1 = instructions.popOperator()
-    instructions.generateQuadruple('D', op1, 0, 0)
+    instructions.generateQuadruple("DRW", op1, 0, 0)
     
 def p_pressurei(p):
     '''pressurei    : PRESSURE integer'''
     global instructions
     op1 = instructions.popOperand()
-    instructions.generateQuadruple('P', op1, 0, 0)
+    instructions.generateQuadruple("PRS", op1, 0, 0)
 
 def p_colori(p):
     '''colori       : COLOR colorConstant'''
@@ -274,27 +275,27 @@ def p_colori(p):
     #NOTE:  special scenario because colorConstant is a keyword. In this case,
     #       op1 comes from the operators.
     op1 = instructions.popOperator()
-    instructions.generateQuadruple('C', op1, 0, 0)
+    instructions.generateQuadruple("COL", op1, 0, 0)
 
 def p_arci(p):
     '''arci         : ARC integer integer'''
     global instructions
     op2 = instructions.popOperand()
     op1 = instructions.popOperand()
-    instructions.generateQuadruple('A', op1, op2, 0)
+    instructions.generateQuadruple("ARC", op1, op2, 0)
 
 def p_circlei(p):
     '''circlei      : CIRCLE integer'''
     global instructions
     op1 = instructions.popOperand()
-    instructions.generateQuadruple('O', op1, 0, 0)
+    instructions.generateQuadruple("CIR", op1, 0, 0)
 
 def p_squarei(p):
     '''squarei      : SQUARE integer integer'''
     global instructions
     op2 = instructions.popOperand()
     op1 = instructions.popOperand()
-    instructions.generateQuadruple('S', op1, op2, 0)
+    instructions.generateQuadruple("SQR", op1, op2, 0)
 
 def p_movement(p):
     '''movement : FORWARD
@@ -330,8 +331,8 @@ def p_id_or_func(p):
     '''id_or_func   : functionCall
                     | empty'''
     global instructions
-   
-   #TODO: set functionCall as false inside the if in line 337
+
+ #TODO: set functionCall as false inside the if in line 338
     if functionCall:
         variable = currentDirectory.get_directory(p[-1]).getReturnVariable()
     else:
@@ -385,7 +386,7 @@ def p_seen_condition(p):
     condition = instructions.popOperand()
     
     if condition.Type is bool:
-        instructions.generateQuadruple("GOTOF", condition, 0, 0)
+        instructions.generateQuadruple("GTF", condition, 0, 0)
         instructions.pushJumpStack(instructions.nextInstruction - 1)
     else:
         print "ERROR: Expected conditional, but found {}!".format(condition.Type)
@@ -395,7 +396,7 @@ def p_seen_condition_block(p):
     '''seen_condition_block :'''
     global instructions
     pendingJump = instructions.popJumpStack()
-    instructions.generateQuadruple("GOTO", 0, 0, 0)
+    instructions.generateQuadruple("GTO", 0, 0, 0)
     instructions.pushJumpStack(instructions.nextInstruction -1)
     instructions.setQuadrupleResult(pendingJump, instructions.nextInstruction)
 
@@ -414,7 +415,7 @@ def p_seen_loop_block(p):
     '''seen_loop_block  :'''
     global instructions
     pendingJump = instructions.popJumpStack()
-    instructions.generateQuadruple("GOTO", 0, 0, pendingJump)
+    instructions.generateQuadruple("GTO", 0, 0, pendingJump)
 
 def p_loophead(p):
     '''loophead : FOR LPAREN assignments seen_assignments1 SEMICOLON ssuperexp seen_for_ssuperexp SEMICOLON assignments seen_assignments2 RPAREN
@@ -433,11 +434,11 @@ def p_seen_for_ssuperexp(p):
     
     if condition.Type is bool:
         pendingJump = instructions.popJumpStack()
-        instructions.generateQuadruple("GOTOF", condition, 0, 0)
+        instructions.generateQuadruple("GTF", condition, 0, 0)
         instructions.pushJumpStack(instructions.nextInstruction - 1)
         #Pending: exit jump address
         
-        instructions.generateQuadruple("GOTO", 0, 0, 0)
+        instructions.generateQuadruple("GTO", 0, 0, 0)
         instructions.pushJumpStack(instructions.nextInstruction)
         instructions.pushJumpStack(instructions.nextInstruction - 1)
         #Pending: loop start jump address
@@ -452,7 +453,7 @@ def p_seen_assignments2(p):
     '''seen_assignments2    :'''
     global instructions
     pendingJump = instructions.popJumpStack()
-    instructions.generateQuadruple("GOTO", 0, 0, pendingJump)
+    instructions.generateQuadruple("GTO", 0, 0, pendingJump)
     #After assigning, jump to condition evaluation
     
     pendingJump = instructions.popJumpStack()
@@ -474,7 +475,7 @@ def p_seen_while_ssuperexp(p):
         raise SystemExit
     
     pendingJump = instructions.popJumpStack()
-    instructions.generateQuadruple("GOTOF", condition, 0, 0)
+    instructions.generateQuadruple("GTF", condition, 0, 0)
     instructions.pushJumpStack(instructions.nextInstruction - 1)
     instructions.pushJumpStack(pendingJump)
 
@@ -495,7 +496,7 @@ def p_printable(p):
     '''printable    : ssuperexp'''
     global instructions
     op1 = instructions.popOperand()
-    instructions.generateQuadruple('PRINT', op1, 0, 0);
+    instructions.generateQuadruple('PRT', op1, 0, 0);
 
 def p_more_printables(p):
     '''more_printables  : COMMA printables
@@ -530,6 +531,10 @@ def p_superexp(p):
         result = currentDirectory.add_temp(resultingType)
         
         if result:
+            if operator is '&&':
+                operator = 'AND'
+            elif operator is '||':
+                operator = 'ORR'
             instructions.generateQuadruple(operator, op1, op2, result)
             instructions.pushOperand(result)
         else:
@@ -555,6 +560,18 @@ def p_seen_comparison(p):
     result = currentDirectory.add_temp(resultingType)
         
     if result:
+        if operator is '==':
+            operator = 'CEQ'
+        elif operator is '<>':
+            operator = 'NEQ'
+        elif operator is '<':
+            operator = 'CLT'
+        elif operator is '>':
+            operator = 'CGT'
+        elif operator is '<=':
+            operator = 'CLE'
+        elif operator is '>=':
+            operator = 'CGE'
         instructions.generateQuadruple(operator, op1, op2, result)
         instructions.pushOperand(result)
     else:
@@ -589,6 +606,10 @@ def p_seen_term(p):
         result = currentDirectory.add_temp(resultingType)
         
         if result:    
+            if operator is '+':
+                operator = 'ADD'
+            elif operator is '-':
+                operator = 'SUB'
             instructions.generateQuadruple(operator, op1, op2, result)
             instructions.pushOperand(result)
         else:
@@ -635,6 +656,10 @@ def p_factor(p):
         result = currentDirectory.add_temp(resultingType)
         
         if result:    
+            if operator is '*':
+                operator = 'MUL'
+            elif operator is '/':
+                operator = 'DIV'
             instructions.generateQuadruple(operator, op1, op2, result)
             instructions.pushOperand(result)
         else:
