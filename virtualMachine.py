@@ -278,7 +278,7 @@ def runVM():
         if operator not in ["DRW", "COL"]:
             if passingParameters:
                 if operator not in ["GTO", "GTF", "CAL", "RET"]:
-                    if result > 7000 and result < 7500:
+                    if result > 7000 and result < 7050:
                         result += 49
                         if stackPointer:
                             result += segmentLength*(stackPointer-1)
