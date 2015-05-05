@@ -1,0 +1,16 @@
+program Factorial
+    int function factorial(int n)
+    {
+        if(n > 0){
+            n = n * factorial(n-1);
+            return n;
+        }
+        else{
+            return 1;
+        }end;
+    }
+    end
+    {
+        print(factorial(5));
+    }
+    end
