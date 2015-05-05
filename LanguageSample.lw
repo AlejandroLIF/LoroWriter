@@ -6,7 +6,7 @@ program Example
     int function myFunction(int n)
         var a : string;
         {
-            print(2*n > 4, a);
+            print(2*n >= 4, a);
             return 3;
         }
     end
@@ -30,21 +30,22 @@ program Example
             {
                 myFunction2(u, 0 - 1);
             }end;
+        print("myFunction3");
         return "ok";
         }
     end
         
     
     {
-        a = 1;
+        a = 10;
         b = 2;
         c = 3.14;
-        c = 2*a + b/2 + a*b*c - a - b - c;
+        c = (2*a + b/2 + a*b*c - a - b - c)+5;
         d = "hello";
         
         print(a, b, c, d);
         
-        if(a<b){
+        if(a<b || b <> 3){
             print("a greater than 0");
         }
         else{
@@ -52,15 +53,31 @@ program Example
             myFunction(b);
         }
         end;
+        b = 3;
+        a = 5;
         
-        while(a < 1){
-            print(a);
-            a = a - 1;
+        while(a > 1){
+            a = (a - 1);
+            if(a == b){            
+                print(a);
+            }end;
+            print(myFunction3() + a);
         }end;
         
         for(a=0; a<360; a = a + 1){
             forward 1;
             right 1;
+            if((a / 2) == 60){
+                color red;
+                print("I like red");
+            }end;
+            if(a / 5 == 50){
+                circle 20;
+            }end;
+            if((a / 3) == 100){
+                color purple;
+                print("I like magenta more");
+            }end;
         }end;
         
         myFunction2(a,b);
