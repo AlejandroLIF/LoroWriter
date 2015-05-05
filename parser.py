@@ -12,8 +12,7 @@ instructions = quadrupleGenerator()
 variableStack = []
 seenType = None
 parameterCounter = 0 
-Function_Or_Var_Name = None
-functionCall = False
+Function_Or_Var_Name = []
 
 precedence =    (
                 ('left', 'AND', 'OR'),
@@ -64,7 +63,7 @@ def p_functionDec(p):
 def p_seen_vars(p):
     '''seen_vars    :'''
     global currentDirectory, instructions
-    currentDirectory.startAddress = instructions.nextInstruction
+    currentDirectory.startAddress = instructions.nextInstruction - 1
 
 def p_seen_function_id(p):
     '''seen_function_id :'''
@@ -126,8 +125,6 @@ def p_statement(p):
                     | loop
                     | print
                     | return'''
-    global functionCall
-    functionCall = False
     
 def p_return(p):
     '''return       : RETURN operand'''
@@ -144,12 +141,14 @@ def p_return(p):
 def p_seen_id_assign_or_func(p):
     '''seen_id_assign_or_func : '''
     global Function_Or_Var_Name
-    Function_Or_Var_Name = p[-1]
+    Function_Or_Var_Name.append(p[-1])
    
    
 def p_assignOrFunccall(p):
     '''assignOrFunccall : assignment
                         | functionCall'''
+    if Function_Or_Var_Name:
+        Function_Or_Var_Name.pop()
 
 def p_assignment(p):
     '''assignment   : EQU seen_EQU ssuperexp'''
@@ -166,47 +165,51 @@ def p_assignment(p):
     else:
         print "ERROR: Invalid types! Variable \"{}\" cannot store \"{}\"!".format(currentDirectory.get_variable(result.Name), currentDirectory.get_variable(op1.Name))
         raise SystemExit
+    #TODO: Verify
+    #if Function_Or_Var_Name:
+     #   Function_Or_Var_Name.pop()
+
 
 def p_seen_EQU(p):
     '''seen_EQU :'''
-    global instructions, currentDirectory, Function_Or_Var_Name
-    variable = currentDirectory.get_variable(Function_Or_Var_Name)
+    global instructions, currentDirectory
+    name = Function_Or_Var_Name[len(Function_Or_Var_Name)-1]
+    variable = currentDirectory.get_variable(name)
 
     if variable:
         instructions.pushOperand(variable)
         instructions.pushOperator(p[-1])
     else:
-        print "ERROR: Variable \"{}\" undeclared!".format(Function_Or_Var_Name)
+        print "ERROR: Variable \"{}\" undeclared!".format(name)
         raise SystemExit
 
 def p_functionCall(p):
     '''functionCall : seen_func_id LPAREN args RPAREN'''
-    global instruction, currentDirectory, functionDirectory, parameterCounter, functionCall
+    global instruction, currentDirectory, functionDirectory, parameterCounter
     if len(functionDirectory.parameters) == parameterCounter:
         instructions.generateQuadruple("CAL",0,0,functionDirectory.startAddress)
     else:
         print "ERROR: Function \"{}\" received {} arguments, expected {}!".format(functionDirectory.identifier, parameterCounter,len(functionDirectory.parameters))
         raise SystemExit
-    functionCall = True
+    instructions.operatorStack.pop()
+    #Function_Or_Var_Name.pop()
+    p[0] = True
                 
 def p_seen_func_id(p):
     '''seen_func_id : '''
-    global currentDirectory, functionDirectory, Function_Or_Var_Name, parameterCounter
-    
-    #Function call as an operator
-    functionDirectory = currentDirectory.get_directory(p[-1])
-    
-    if not functionDirectory:
-        #Function call as a statement
-        functionDirectory = currentDirectory.get_directory(Function_Or_Var_Name)
+    global currentDirectory, functionDirectory, parameterCounter, instructions
+    name = Function_Or_Var_Name[len(Function_Or_Var_Name)-1]
+    #Function call as a statement
+    functionDirectory = currentDirectory.get_directory(name)
     
     if not functionDirectory:
         #TODO: feedback line number
-        print "ERROR: Undeclared function: \"{}\" in line #line number#".format(Function_Or_Var_Name)
+        print "ERROR: Undeclared function: \"{}\" in line #line number#".format(name)
         raise SystemExit
         
     parameterCounter = 0
-    instructions.generateQuadruple("ERA", len(currentDirectory.variables), 0, 0);
+    instructions.operatorStack.append("(")
+    instructions.generateQuadruple("ERA", 4050, 0, 0);
     
 def p_args(p):
     '''args     : arg
@@ -225,15 +228,15 @@ def p_seen_arg(p):
         variable = functionDirectory.get_variable(nextParam)
         compatibleType = getResultingType("=", variable.Type, op1.Type)
         if variable.Type is compatibleType:
-            #TODO: find a more elegant solution for the + 7000 magic number
-            instructions.generateQuadruple("EQU", op1, 0, Variable("Param{}".format(parameterCounter), variable.Type, parameterCounter + 7000))
+            #TODO: find a more elegant solution for the + 7001 magic number
+            instructions.generateQuadruple("EQU", op1, 0, Variable("Param{}".format(parameterCounter), variable.Type, parameterCounter + 7001))
         else:
             print "ERROR: Incompatible arguments. Received \"{}\", expected \"{}\"!".format(op1.Type,functionDirectory.get_variable(nextParam))
             raise SystemExit
+        parameterCounter += 1
     else:
         print "ERROR: Function \"{}\" received more arguments than expected!".format(functionDirectory.identifier)
         raise SystemExit
-    parameterCounter += 1
     
 def p_more_arg(p):
     '''more_arg : COMMA arg
@@ -261,6 +264,10 @@ def p_drawi(p):
     #NOTE:  special scenario because boolean is a keyword and not the result of logic evaluation
     #       in this case, op1 comes from the operators.  
     op1 = instructions.popOperator()
+    if op1 == "TRUE":
+        op1 = True
+    else:
+        op1 = False
     instructions.generateQuadruple("DRW", op1, 0, 0)
     
 def p_pressurei(p):
@@ -310,7 +317,7 @@ def p_operand(p):
     '''operand  : INTEGER
                 | FLOAT
                 | STRING
-                | ID id_or_func'''
+                | ID seen_id_assign_or_func id_or_func'''
     global instructions, currentDirectory
     
     op1 = None
@@ -331,13 +338,19 @@ def p_id_or_func(p):
     '''id_or_func   : functionCall
                     | empty'''
     global instructions
-
- #TODO: set functionCall as false inside the if in line 338
-    if functionCall:
-        variable = currentDirectory.get_directory(p[-1]).getReturnVariable()
+    name = Function_Or_Var_Name[len(Function_Or_Var_Name)-1]
+    if p[1]:
+        variable = currentDirectory.get_directory(name).getReturnVariable()
     else:
-        variable = currentDirectory.get_variable(p[-1])
-    instructions.pushOperand(variable)
+        variable = currentDirectory.get_variable(name)
+    
+    Function_Or_Var_Name.pop()
+        
+    if variable:
+        instructions.pushOperand(variable)
+    else:
+        print "ERROR! Variable \"{}\" not found!".format(name)
+        raise SystemExit
     
 def p_boolean(p):
     '''boolean  : TRUE
@@ -531,10 +544,7 @@ def p_superexp(p):
         result = currentDirectory.add_temp(resultingType)
         
         if result:
-            if operator is '&&':
-                operator = 'AND'
-            elif operator is '||':
-                operator = 'ORR'
+            operator = {"&&" : "AND", "||" : "ORR"}[operator]
             instructions.generateQuadruple(operator, op1, op2, result)
             instructions.pushOperand(result)
         else:
@@ -695,7 +705,12 @@ if __name__ == '__main__':
         parser = yacc.yacc()
         parser.parse(s);
         #print currentDirectory
+        print str(currentDirectory.getConstantDeclarations())
         print instructions
+        myFile = open("loroCode.vwl", 'w')
+        myFile.write(str(currentDirectory.getConstantDeclarations()))
+        myFile.write(str(instructions))
+        myFile.close()
     else:
         print "Usage syntax: %s filename" %sys.argv[0]
 
