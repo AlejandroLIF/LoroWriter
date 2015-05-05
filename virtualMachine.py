@@ -1,3 +1,5 @@
+import sys
+import shlex
 from turtle import *
 
 Writer = Screen()
@@ -5,333 +7,375 @@ Writer.setup(400,200)
 loro = Turtle()
 loro.pendown() 
 
-instructionMemory = {}
-#dataMemory = range(0,4050700)
-dataMemory = range(0,30) #for debugging
-fields = []
+instructionMemory = []
+jumpStack = []
+stackPointer = 0
+segmentLength = 4500
+returnStack = []
+
+
+
+dataMemory = range(0,4050700)
 PC = 0
-operator = ""
-op1 = ""
-op2 = ""
-result = ""
-line = ""
 
-def ADD():
+passingParameters = False
+
+#   BEGIN ASSIGNMENT
+def EQU(op1, op2, result):
+    dataMemory[result] = op1
+#   END ASSIGNMENT
+
+#   BEGIN ARITHMETIC OPERATIONS
+def ADD(op1, op2, result):
     try:
-        dataMemory[int(result)] = int(dataMemory[int(op1)]) + int(dataMemory[int(op2)])
+        dataMemory[result] = op1 + op2
     except:
         try:
-            dataMemory[int(result)] = float(dataMemory[int(op1)]) + float(dataMemory[int(op2)])
-        except:
-            try:
-                dataMemory[int(result)] = str(dataMemory[int(op1)]) + str(dataMemory[int(op2)])
-            except:
-                raise TypeError("Operation invalid for specified operand types")
-
-def SUB():
-    try:
-        dataMemory[int(result)] = int(dataMemory[int(op1)]) - int(dataMemory[int(op2)])
-    except:
-        try:
-            dataMemory[int(result)] = float(dataMemory[int(op1)]) - float(dataMemory[int(op2)])
+            dataMemory[result] = str(op1) + str(op2)
         except:
             raise TypeError("Operation invalid for specified operand types")
 
-def MUL():
+def SUB(op1, op2, result):
     try:
-        dataMemory[int(result)] = int(dataMemory[int(op1)]) * int(dataMemory[int(op2)])
+        dataMemory[result] = op1 - op2
     except:
-        try:
-            dataMemory[int(result)] = float(dataMemory[int(op1)]) * float(dataMemory[int(op2)])
-        except:
-            raise TypeError("Operation invalid for specified operand types")
+        raise TypeError("Operation invalid for specified operand types")
 
-def DIV():
+def MUL(op1, op2, result):
+    try:
+        dataMemory[result] = op1 * op2
+    except:
+        raise TypeError("Operation invalid for specified operand types")
+
+def DIV(op1, op2, result):
     if op2 == 0:
         raise ValueError("Attempting to divide by 0")
     else:
-        try:
-            dataMemory[int(result)] = int(dataMemory[int(op1)]) / int(dataMemory[int(op2)])
+        try:    
+            dataMemory[result] = op1 / op2
         except:
-            try:
-                dataMemory[int(result)] = float(dataMemory[int(op1)]) / float(dataMemory[int(op2)])
-            except:
-                raise TypeError("Operation invalid for specified operand types")
+            raise TypeError("Operation invalid for specified operand types: {} = {} / {}".format(result, op1, op2))
+#END ARITHMETIC OPERATIONS
 
-def EQU():
+#BEGIN LOGICAL COMPARISONS
+def CEQ(op1, op2, result):
     try:
-        dataMemory[int(result)] = dataMemory[int(op1)]
-    except:
-        raise TypeError("Operation invalid for specified operand type")
-
-def CEQ():
-    try:
-        if float(dataMemory[int(op1)]) == float(dataMemory[int(op2)]):
-            dataMemory[int(result)] = "TRUE"
+        if op1 == op2:
+            dataMemory[result] = True
         else:
-            dataMemory[int(result)] = "FALSE"
-    except:
-        try:
-            if str(dataMemory[int(op1)]) == str(dataMemory[int(op2)]):
-                dataMemory[int(result)] = "TRUE"
-            else:
-                dataMemory[int(result)] = "FALSE"
-        except:        
-            raise TypeError("Operation invalid for specified operand types")
+            dataMemory[result] = False
+    except:        
+        raise TypeError("Operation invalid for specified operand types")
 
-def CNE():
+def CNE(op1, op2, result):
     try:
-        if float(dataMemory[int(op1)]) != float(dataMemory[int(op2)]):
-            dataMemory[int(result)] = "TRUE"
+        if op1 != op2:
+            dataMemory[result] = True
         else:
-            dataMemory[int(result)] = "FALSE"
-    except:
-        try:
-            if str(dataMemory[int(op1)]) != str(dataMemory[int(op2)]):
-                dataMemory[int(result)] = "TRUE"
-            else:
-                dataMemory[int(result)] = "FALSE"
-        except:        
-            raise TypeError("Operation invalid for specified operand types")
+            dataMemory[result] = False
+    except:        
+        raise TypeError("Operation invalid for specified operand types")
 
-def CLT():
+def CLT(op1, op2, result):
     try:
-        if float(dataMemory[int(op1)]) < float(dataMemory[int(op2)]):
-            dataMemory[int(result)] = "TRUE"
+        if op1 < op2:
+            dataMemory[result] = True
         else:
-            dataMemory[int(result)] = "FALSE"
+            dataMemory[result] = False
     except:
         raise TypeError("Operation invalid for specified operand types")
 
-def CGT():
+def CGT(op1, op2, result):
     try:
-        if float(dataMemory[int(op1)]) > float(dataMemory[int(op2)]):
-            dataMemory[int(result)] = "TRUE"
+        if op1 > op2:
+            dataMemory[result] = True
         else:
-            dataMemory[int(result)] = "FALSE"
+            dataMemory[result] = False
     except:
         raise TypeError("Operation invalid for specified operand types")
 
-def CLE():
+def CLE(op1, op2, result):
     try:
-        if float(dataMemory[int(op1)]) <= float(dataMemory[int(op2)]):
-            dataMemory[int(result)] = "TRUE"
+        if op1 <= op2:
+            dataMemory[result] = True
         else:
-            dataMemory[int(result)] = "FALSE"
+            dataMemory[result] = False
     except:
         raise TypeError("Operation invalid for specified operand types")
 
-def CGE():
+def CGE(op1, op2, result):
     try:
-        if float(dataMemory[int(op1)]) >= float(dataMemory[int(op2)]):
-            dataMemory[int(result)] = "TRUE"
+        if op1 >= op2:
+            dataMemory[result] = True
         else:
-            dataMemory[int(result)] = "FALSE"
+            dataMemory[result] = False
     except:
         raise TypeError("Operation invalid for specified operand types")
+#   END LOGICAL COMPARISONS
 
-def AND():
+#   BEGIN BOOLEAN OPERATIONS
+def AND(op1, op2, result):
     try:
-        if str(dataMemory[int(op1)]) == "TRUE" and str(dataMemory[int(op2)]) == "TRUE":
-            dataMemory[int(result)] = "TRUE"
+        if op1 and op2:
+            dataMemory[result] = True
         else:
-            dataMemory[int(result)] = "FALSE"
+            dataMemory[result] = False
     except:
         raise TypeError("Operation invalid for specified operand types")
 
 def ORR():
     try:
-        if str(dataMemory[int(op1)]) == "TRUE" or str(dataMemory[int(op2)]) == "TRUE":
-            dataMemory[int(result)] = "TRUE"
+        if op1 or op2:
+            dataMemory[result] = True
         else:
-            dataMemory[int(result)] = "FALSE"
+            dataMemory[result] = False
     except:
         raise TypeError("Operation invalid for specified operand types")
+#   END BOOLEAN OPERATIONS
 
-def PRT():
-    try:
-        print str(dataMemory[int(op1)])
-    except:
-        raise TypeError("Operation invalid for specified operand type")
-
+#   BEGIN JUMP AND FUNCTION OPERATIONS
 #TODO: checar que ajustes seran necesarios una vez que queden las constantes dentro del archivo cuadruplos (offset?)
-def GTO():
+def GTO(op1, op2, result):
     global PC
-    PC = int(result)-1
+    PC = result - 1
     
 
 #TODO: checar que ajustes seran necesarios una vez que queden las constantes dentro del archivo de cuadruplos (offset?)
-def GTF():
+def GTF(op1, op2, result):
     global PC
     try:
-        if str(dataMemory[int(op1)]) == "FALSE":
-            PC = int(result)-1
+        if not op1:
+            PC = result - 1
     except:
         raise TypeError("Type mismatch, expected boolean")
 
-#No se que se hace con los era, call y ret
-def ERA():
-    print "wede"
-def CAL():
-    print "wede"
-def RET():
-    print "wede"
+def ERA(op1, op2, result):
+    global passingParameters, stackPointer
+    stackPointer+=1
+    print stackPointer
+    passingParameters = True
 
-def DRW():
+
+def CAL(op1, op2, result):
+    global passingParameters
+    jumpStack.append(PC)
+    GTO(op1, op2, result + 1)
+    passingParameters = False
+    print
+
+
+def RET(op1, op2, result):
+    global stackPointer
+    print op1
+    #if op1 != 0:
+    #    op1 += stackPointer[len(stackPointer)-1]
+    stackPointer-=1
+    
+    returnStack.append(dataMemory[op1])
+    result = jumpStack.pop()
+    GTO(op1, op2, result+1)
+#   END JUMP AND FUNCTION OPERATIONS
+
+#   BEGIN LANGUAGE-SPECIFIC OPERATIONS
+def PRT(op1, op2, result):
     try:
-        if str(dataMemory[int(op1)]) == "TRUE":
+        print op1
+    except:
+        raise TypeError("Operation invalid for specified operand type")
+
+def DRW(op1, op2, result):
+    try:
+        if op1:
             loro.pendown()
-        elif str(dataMemory[int(op1)]) == "FALSE":
+        else:
             loro.penup()
     except: 
         raise TypeError("Type mismatch, expected boolean")
 
-def ARC():
+def ARC(op1, op2, result):
     try:
-        loro.circle(int(dataMemory[int(op1)]), int(dataMemory[int(op1)]))
+        loro.circle(op1, op2)
     except:
         raise TypeError("Type mismatch, expected integer values")
         
-def CIR():
+def CIR(op1, op2, result):
     try:
-        loro.circle(int(dataMemory[int(op1)]))
+        loro.circle(op1)
     except:
         raise TypeError("Type mismatch, expected an integer value")
     
 #Assuming first line of the square starts being drawn from starting orientation and position of the turtle
-def SQR():
+def SQR(op1, op2, result):
     try:   
         #save previous state
         speed=loro.speed()
-        pen=str(loro.isdown())
+        pen=loro.isdown()
         
-        #paint 
+        #paint
         loro.speed(0)
         loro.pendown()
-        loro.forward(int(dataMemory[int(op1)]))
+        loro.forward(op1)
         loro.right(90)
-        loro.forward(int(dataMemory[int(op2)]))
+        loro.forward(op2)
         loro.right(90)
-        loro.forward(int(dataMemory[int(op1)]))
+        loro.forward(op1)
         loro.right(90)
-        loro.forward(int(dataMemory[int(op2)]))
+        loro.forward(op2)
         loro.right(90)
 
         #restore previous state
         loro.speed(speed)
-        if pen == "False":
-            loro.penup
+        if not pen:
+            loro.penup()
     except:
         raise TypeError("Type mismatch, expected integer values")
     
-#no supe bien que se supone que hace el pressure. yo supondria que es si se presiona la pluma o no (si dibuja o no)
-#pero eso es lo que hace el draw (que tiene boolean como parametro)
-#este tiene integer como argumento, por ahora lo puse como el ancho de la pluma
-def PRS():
+def PRS(op1, op2, result):
     try:
-        loro.pensize(int(dataMemory[int(op1)]))
+        loro.pensize(op1)
+    except:
+        raise ValueError("Invalid width")
+
+def COL(op1, op2, result):
+    try:
+        loro.color(op1)
     except:
         raise ValueError("Invalid colors")
 
-def COL():
+def RHT(op1, op2, result):
     try:
-        loro.color(str(dataMemory[int(op1)]),str(dataMemory[int(op1)]))
-    except:
-        raise ValueError("Invalid colors")
-
-def RHT():
-    try:
-        loro.right(int(dataMemory[int(op1)]))
+        loro.right(op1)
     except: 
         raise TypeError("Type mismatch, expected an integer value")
 
-def LFT():
+def LFT(op1, op2, result):
     try:
-        loro.right(int(dataMemory[int(op1)]))
+        loro.left(op1)
     except: 
         raise TypeError("Type mismatch, expected an integer value")
 
-def FWD():
+def FWD(op1, op2, result):
     try:
-        loro.forward(int(dataMemory[int(op1)]))
+        loro.forward(op1)
     except: 
         raise TypeError("Type mismatch, expected an integer value")
 
-def BWD():
+def BWD(op1, op2, result):
     try:
-        loro.backward(int(dataMemory[int(op1)]))
+        loro.backward(op1)
     except: 
         raise TypeError("Type mismatch, expected an integer value")
+#   END LANGUAGE-SPECIFIC OPERATIONS
 
-
-operations = {
-    "ADD" : ADD,
-    "SUB" : SUB, 
-    "MUL" : MUL, 
-    "DIV" : DIV, 
-    "EQU" : EQU, 
-    "CEQ" : CEQ, 
-    "CNE" : CNE, 
-    "CLT" : CLT, 
-    "CGT" : CGT, 
-    "CLE" : CLE, 
-    "CGE" : CGE, 
-    "AND" : AND, 
-    "ORR" : ORR, 
-    "PRT" : PRT, 
-    "DRW" : DRW, 
-    "ARC" : ARC, 
-    "CIR" : CIR, 
-    "SQR" : SQR, 
-    "PRS" : PRS, 
-    "COL" : COL, 
-    "RHT" : RHT, 
-    "LFT" : LFT, 
-    "FWD" : FWD, 
-    "BWD" : BWD, 
-    "GTO" : GTO, 
-    "GTF" : GTF, 
-    "ERA" : ERA, 
-    "CAL" : CAL, 
-    "RET" : RET 
-}
-
-with open("sampleQuadruples.txt",'r') as code:
-    instructionMemory = code.readlines()
-
-for constants in range(0,len(instructionMemory)):
-    line = instructionMemory[constants]    
-    fields = line.split()
-    PC = constants
+def runVM():
+    global PC, operator, op1, op2, result
+    PC = 0
+    methods = globals().copy()
+    methods.update(locals())
     
-    if fields[0] == "EQU":
-        dataMemory[int(fields[3])] = fields[1]
+    
+    while PC < len(instructionMemory):
+        op1Return = False
+        op2Return = False
+        #Read quadruple
+        operator, op1, op2, result = instructionMemory[PC]
+        
+        result = int(result)
+        #Translate addresses
+        if operator in ["DRW", "COL"]:
+            pass
+        else:
+            if passingParameters:
+                if operator not in ["GTO", "GTF", "CAL", "RET"]:
+                    if result > 7000 and result < 7500:
+                        result += 49
+                        result += segmentLength*(stackPointer-1)
+                    else:
+                        result += segmentLength*(stackPointer-2)
+                
+                op1 = int(op1)
+                if op1 > 7000:
+                    op1 += segmentLength*(stackPointer-2)
+                    op1 = dataMemory[op1]
+                elif op1 < 7000:
+                    op1 = dataMemory[op1]
+                else:
+                    op1 = returnStack.pop()
+                    
+                op2 = int(op2)
+                if op2 > 7000:
+                    op2 += segmentLength*(stackPointer-2)
+                    op2 = dataMemory[op2]
+                elif op2 < 7000:
+                    op2 = dataMemory[op2]
+                else:
+                    op2 = returnStack.pop()
+            else:
+                if result > 7000 and result < 7500:
+                    result += 49
+                if operator not in ["GTO", "GTF", "CAL", "RET"]:
+                    result += segmentLength*(stackPointer-1)
+                
+                op1 = int(op1)
+                if op1 > 7000:
+                    op1 += segmentLength*(stackPointer-1)
+                    op1 = dataMemory[op1]
+                elif op1 < 7000:
+                    op1 = dataMemory[op1]
+                else:
+                    op1 = returnStack.pop()
+                    
+                op2 = int(op2)
+                if op2 > 7000:
+                    op2 += segmentLength*(stackPointer-1)
+                    op2 = dataMemory[op2]
+                elif op2 < 7000:
+                    op2 = dataMemory[op2]
+                else:
+                    op2 = returnStack.pop()
+            
+        print "PC: ", PC
+        print [operator, op1, op2, result]
+        #Execute quadruple
+        method = methods.get(str(operator))
+        if not method:
+            raise Exception("Method \"{}\" not implemented!".forat(str(operator)))
+        method(op1, op2, result)
+        
+        raw_input("Press enter...")
+        #Increment PC to execute next instruction
+        PC += 1
+   #Debugging code
+    '''
+    for i,n in enumerate(instructionMemory):
+        print "{}\t{}\t{}\t{}\t{}\n".format(i, n[0], n[1], n[2], n[3])
+    raise SystemExit
+    '''
+    
+if __name__ == '__main__':
+    if len(sys.argv) == 2:
+        #Load code to the VM
+        with open(sys.argv[1],'r') as code:
+            line = code.readline()
+            fields = shlex.split(line)
+            while fields[0] == "CNT":
+                try:
+                    op1 = int(fields[1])
+                except:
+                    try:
+                        op1 = float(fields[1])
+                    except:
+                        op1 = str(fields[1])
+                        
+                dataMemory[int(fields[3])] = op1
+                    
+                line = code.readline()
+                fields = shlex.split(line)
+            
+            instructionMemory.append(fields)
+            for line in code.readlines():
+                instructionMemory.append(line.split())
+        #Done loading code. Execute.
+        runVM()
     else:
-        break
-
-while PC < len(instructionMemory):
-    line = instructionMemory[PC]  
-    fields = line.split()
-    operator = fields[0]
-    op1 = fields[1]
-    op2 = fields[2]
-    result = fields[3]
-    operations[operator]()
-    PC+=1
-
-print dataMemory #for debugging
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        print "Usage syntax: %s filename" %sys.argv[0]
