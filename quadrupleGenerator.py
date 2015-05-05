@@ -1,23 +1,24 @@
-from procedureDirectory import Variable
-
 #Begin class quadruple
 class quadruple:
-    printFormat = "Names"
     
     def __init__(self, operator='', op1='', op2='', result=''):
+        self.printFormat = "Address"
         self.operator = operator
         self.op1 = op1
         self.op2 = op2
         self.result = result
         
     def __str__(self):
-        if quadruple.printFormat == "Names":
-            return str(self.operator) + '\t' + str(self.op1.Name) + '\t' + str(self.op2.Name) + \
-                    '\t' + str(self.result.Name)
+        if self.printFormat == "Names":
+            return '{:3s}\t{:8}\t{:8}\t{:8}'.format(str(self.operator), str(self.op1.Name), str(self.op2.Name), str(self.result.Name))
+        elif self.printFormat == "Constants":
+            return '{:3s}\t{:8}\t{:8}\t{:8}'.format(str(self.operator), str(self.op1.Name), str(self.op2.Name), str(self.result.Address))
         else:
-            return str(self.operator) + '\t' + str(self.op1.Address) + '\t' + str(self.op2.Address) + \
-                    '\t' + str(self.result.Address)
+            return '{:3s}\t{:8}\t{:8}\t{:8}'.format(str(self.operator), str(self.op1.Address), str(self.op2.Address), str(self.result.Address))
+            
 #End class quadruple
+
+from procedureDirectory import Variable
 
 #Begin class quadrupleGenerator
 class quadrupleGenerator:
@@ -29,15 +30,19 @@ class quadrupleGenerator:
         self.nextInstruction = 0
 
         #Generate the "jump to main" quadruple
-        self.generateQuadruple("GOTO", 0, 0, 0)
+        self.generateQuadruple("GTO", 0, 0, 0)
         self.pushJumpStack(0)
     
     def __str__(self):
+        string = ""
+        
+        #Debugging representation
+        '''
         string = 'quadruples:\n'
         
         for index, quadruple in enumerate(self.quadruples):
             string += '\t{}\t{}\n'.format(str(index), str(quadruple))
-            
+           
         string += 'operatorStack:\n{}\n'.format(str(self.operatorStack))
         
         string += 'operandStack:\n[\n'
@@ -46,6 +51,11 @@ class quadrupleGenerator:
         string += ']\n'
             
         string += 'jumpStack:\n{}\n'.format(str(self.jumpStack))
+        '''
+        
+        for quadruple in self.quadruples:
+            string += '{}\n'.format(str(quadruple))
+        
         return string
     
     def pushJumpStack(self, index):
