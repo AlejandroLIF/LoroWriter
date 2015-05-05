@@ -1,0 +1,13 @@
+program ForLoop
+    var a : float;
+        b : string;
+        c : int;
+    {
+        a = 4.5;
+        b = "I can count ";
+        for(c = 0; c < 3; c = c + 1){
+            b = b + a*c;
+        }end;
+        print(b);
+    }
+    end
