@@ -9,6 +9,8 @@ class Variable:
         return "{}\t{}\t{}".format(str(self.Name), str(self.Type), str(self.Address))
 #End class Variable
 
+from quadrupleGenerator import quadruple
+
 #Begin class procedureDirectory
 class procedureDirectory:
     constants = {}     #stores the value of constants
@@ -30,9 +32,10 @@ class procedureDirectory:
             self.nextVarAddress = 1999
             self.nextTempAddress = 4999
         
-        #Note: zero-const is zero
-        self.nextConst = 0
+        #Note: zero-const is zero and all variables and constants are numbered with preincrement
+        self.nextConst = -1
         self.add_const(int, 0)
+        
     
     def __str__(self):
         return self.to_string()
@@ -60,7 +63,7 @@ class procedureDirectory:
         return string
 
     def getReturnVariable(self):
-        return Variable("retVar", self.Type, "retAddr")
+        return Variable("retVar", self.Type, 7000)
         
     def get_variable(self, identifier):
         currDir = self
@@ -142,6 +145,14 @@ class procedureDirectory:
             currDirr = currDirr.parent
         return string
     
+    def get_all_variables(self):
+        currDir = self
+        allVariables = []
+        for var in procedureDirectory.constants:
+            if not var in allVariables:
+                allVariables.append(var)
+        return allVariables
+    
     def get_directory(self, identifier):
         currDir = self
         while currDir:
@@ -164,7 +175,20 @@ class procedureDirectory:
             return True
         else:
             return False
-
+    
+    def getConstantDeclarations(self):
+        constantDeclarations = []
+        for var in self.get_all_variables():
+            var = self.get_variable(var)
+            if var.Address <= self.nextConst:
+                constantDeclarations.append(quadruple("CNT", var, Variable(0), var))
+                
+        string = ""
+        for const in constantDeclarations:
+            const.printFormat = "Constants"
+            string += '{}\n'.format(str(const))
+        return string
+    
 #End class procedureDirectory
 
 #Test routine
