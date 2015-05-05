@@ -42,6 +42,8 @@ program Example
         c = 2*a + b/2 + a*b*c - a - b - c;
         d = "hello";
         
+        print(a, b, c, d);
+        
         if(a<b){
             print("a greater than 0");
         }
