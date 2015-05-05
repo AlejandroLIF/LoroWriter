@@ -10,7 +10,7 @@ loro.pendown()
 instructionMemory = []
 jumpStack = []
 stackPointer = 0
-segmentLength = 4500
+segmentLength = 4050
 returnStack = []
 
 
