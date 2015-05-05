@@ -2,8 +2,8 @@ import sys
 import shlex
 from turtle import *
 
-Writer = Screen()
-Writer.setup(400,200)
+#Writer = Screen()
+#Writer.setup(400,200)
 loro = Turtle()
 loro.pendown() 
 
@@ -123,7 +123,7 @@ def AND(op1, op2, result):
     except:
         raise TypeError("Operation invalid for specified operand types")
 
-def ORR():
+def ORR(op1, op2, result):
     try:
         if op1 or op2:
             dataMemory[result] = True
@@ -134,13 +134,10 @@ def ORR():
 #   END BOOLEAN OPERATIONS
 
 #   BEGIN JUMP AND FUNCTION OPERATIONS
-#TODO: checar que ajustes seran necesarios una vez que queden las constantes dentro del archivo cuadruplos (offset?)
 def GTO(op1, op2, result):
     global PC
     PC = result - 1
     
-
-#TODO: checar que ajustes seran necesarios una vez que queden las constantes dentro del archivo de cuadruplos (offset?)
 def GTF(op1, op2, result):
     global PC
     try:
@@ -152,7 +149,7 @@ def GTF(op1, op2, result):
 def ERA(op1, op2, result):
     global passingParameters, stackPointer
     stackPointer+=1
-    print stackPointer
+    #print stackPointer
     passingParameters = True
 
 
@@ -161,17 +158,14 @@ def CAL(op1, op2, result):
     jumpStack.append(PC)
     GTO(op1, op2, result + 1)
     passingParameters = False
-    print
+   # print
 
 
 def RET(op1, op2, result):
     global stackPointer
-    print op1
-    #if op1 != 0:
-    #    op1 += stackPointer[len(stackPointer)-1]
+    #print op1 
     stackPointer-=1
-    
-    returnStack.append(dataMemory[op1])
+    returnStack.append(op1)
     result = jumpStack.pop()
     GTO(op1, op2, result+1)
 #   END JUMP AND FUNCTION OPERATIONS
@@ -279,72 +273,83 @@ def runVM():
         op2Return = False
         #Read quadruple
         operator, op1, op2, result = instructionMemory[PC]
-        
         result = int(result)
         #Translate addresses
-        if operator in ["DRW", "COL"]:
-            pass
-        else:
+        if operator not in ["DRW", "COL"]:
             if passingParameters:
                 if operator not in ["GTO", "GTF", "CAL", "RET"]:
                     if result > 7000 and result < 7500:
                         result += 49
-                        result += segmentLength*(stackPointer-1)
+                        if stackPointer:
+                            result += segmentLength*(stackPointer-1)
                     else:
-                        result += segmentLength*(stackPointer-2)
+                        if stackPointer:
+                            result += segmentLength*(stackPointer-2)
                 
-                op1 = int(op1)
-                if op1 > 7000:
-                    op1 += segmentLength*(stackPointer-2)
-                    op1 = dataMemory[op1]
-                elif op1 < 7000:
-                    op1 = dataMemory[op1]
-                else:
-                    op1 = returnStack.pop()
-                    
                 op2 = int(op2)
                 if op2 > 7000:
                     op2 += segmentLength*(stackPointer-2)
+                    #print "OP2: ", op2
                     op2 = dataMemory[op2]
                 elif op2 < 7000:
+                    #print "OP2: ", op2
                     op2 = dataMemory[op2]
                 else:
                     op2 = returnStack.pop()
+                    
+                op1 = int(op1)
+                if op1 > 7000:
+                    op1 += segmentLength*(stackPointer-2)
+                    #print "OP1: ", op1
+                    op1 = dataMemory[op1]
+                elif op1 < 7000:
+                    op1 = dataMemory[op1]
+                    #print "OP1: ", op1
+                else:
+                    op1 = returnStack.pop()
+                    
             else:
-                if result > 7000 and result < 7500:
-                    result += 49
+                #print "Not passing parameters"
                 if operator not in ["GTO", "GTF", "CAL", "RET"]:
-                    result += segmentLength*(stackPointer-1)
+                    if stackPointer:
+                        result += segmentLength*(stackPointer-1)
                 
+                #print "Result: ", result
+                
+                op2 = int(op2)
+                if op2 > 7000:
+                    op2 += segmentLength*(stackPointer-1)
+                    #print "OP2: ", op2
+                    op2 = dataMemory[op2]
+                elif op2 < 7000:
+                    #print "OP2: ", op2
+                    op2 = dataMemory[op2]
+                else:
+                    op2 = returnStack.pop()
+                    
                 op1 = int(op1)
                 if op1 > 7000:
                     op1 += segmentLength*(stackPointer-1)
+                    #print "OP1: ", op1
                     op1 = dataMemory[op1]
                 elif op1 < 7000:
+                    #print "OP1: ", op1
                     op1 = dataMemory[op1]
                 else:
                     op1 = returnStack.pop()
                     
-                op2 = int(op2)
-                if op2 > 7000:
-                    op2 += segmentLength*(stackPointer-1)
-                    op2 = dataMemory[op2]
-                elif op2 < 7000:
-                    op2 = dataMemory[op2]
-                else:
-                    op2 = returnStack.pop()
-            
-        print "PC: ", PC
-        print [operator, op1, op2, result]
+        #print "PC: ", PC
+        #print [operator, op1, op2, result]
         #Execute quadruple
         method = methods.get(str(operator))
         if not method:
-            raise Exception("Method \"{}\" not implemented!".forat(str(operator)))
+            raise Exception("Method \"{}\" not implemented!".format(str(operator)))
         method(op1, op2, result)
         
-        raw_input("Press enter...")
+        #raw_input("Press enter to continue...")
         #Increment PC to execute next instruction
         PC += 1
+    raw_input("Press enter to exit...")
    #Debugging code
     '''
     for i,n in enumerate(instructionMemory):
