@@ -266,8 +266,11 @@ def p_drawi(p):
     op1 = instructions.popOperator()
     if op1 == "TRUE":
         op1 = True
-    else:
+    elif op1 == "FALSE":
         op1 = False
+    else:
+        print "Error: Expected TRUE / FALSE, but found \"{}\"!".format(op1)
+        raise SystemExit
     instructions.generateQuadruple("DRW", op1, 0, 0)
     
 def p_pressurei(p):
@@ -282,7 +285,7 @@ def p_colori(p):
     #NOTE:  special scenario because colorConstant is a keyword. In this case,
     #       op1 comes from the operators.
     op1 = instructions.popOperator()
-    instructions.generateQuadruple("COL", op1, 0, 0)
+    instructions.generateQuadruple("COL", Variable(op1, 0, op1) , 0, 0)
 
 def p_arci(p):
     '''arci         : ARC integer integer'''
@@ -570,18 +573,12 @@ def p_seen_comparison(p):
     result = currentDirectory.add_temp(resultingType)
         
     if result:
-        if operator is '==':
-            operator = 'CEQ'
-        elif operator is '<>':
-            operator = 'NEQ'
-        elif operator is '<':
-            operator = 'CLT'
-        elif operator is '>':
-            operator = 'CGT'
-        elif operator is '<=':
-            operator = 'CLE'
-        elif operator is '>=':
-            operator = 'CGE'
+        operator = {"==" : "CEQ",
+                    "<>" : "CNE",
+                    "<"  : "CLT",
+                    ">"  : "CGT",
+                    "<=" : "CLE",
+                    ">=" : "CGE"}[operator]
         instructions.generateQuadruple(operator, op1, op2, result)
         instructions.pushOperand(result)
     else:
