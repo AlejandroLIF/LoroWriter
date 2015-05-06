@@ -1,0 +1,19 @@
+program Graphics
+    {
+        pressure 5;
+        arc 100 80;
+        right 50;
+        pressure 2;
+        color orange;
+        square 50 50;
+        draw false;
+        left 130;
+        forward 100;
+        right 90;
+        backward 100;
+        draw true;
+        pressure 15;
+        color blue;
+        circle 83;
+    }
+    end
