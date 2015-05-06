@@ -179,7 +179,8 @@ def PRT(op1, op2, result):
 
 def DRW(op1, op2, result):
     try:
-        if op1:
+        print op1
+        if op1 == "True":
             loro.pendown()
         else:
             loro.penup()
