@@ -11,6 +11,6 @@ program Factorial
     }
     end
     {
-        print(factorial(5));
+        print(factorial(200));
     }
     end
