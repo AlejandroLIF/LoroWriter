@@ -127,7 +127,7 @@ def p_statement(p):
                     | return'''
     
 def p_return(p):
-    '''return       : RETURN operand'''
+    '''return       : RETURN exp'''
     global currentDirectory, instructions
     var = instructions.popOperand()
     compatibleType = getResultingType("=", currentDirectory.Type, var.Type)
@@ -260,18 +260,18 @@ def p_movementi(p):
         
 def p_drawi(p):
     '''drawi        : DRAW boolean'''
-    global instructions
+    global instructions, currentDirectory
     #NOTE:  special scenario because boolean is a keyword and not the result of logic evaluation
     #       in this case, op1 comes from the operators.  
     op1 = instructions.popOperator()
-    if op1 == "TRUE":
+    if op1 == "true":
         op1 = True
-    elif op1 == "FALSE":
+    elif op1 == "false":
         op1 = False
     else:
-        print "Error: Expected TRUE / FALSE, but found \"{}\"!".format(op1)
+        print "Error: Expected true / false, but found \"{}\"!".format(op1)
         raise SystemExit
-    instructions.generateQuadruple("DRW", op1, 0, 0)
+    instructions.generateQuadruple("DRW", Variable(op1, 0, op1), 0, 0)
     
 def p_pressurei(p):
     '''pressurei    : PRESSURE integer'''
@@ -367,7 +367,7 @@ def p_integer(p):
                 | INTEGER'''
     global instructions, currentDirectory
     if type(p[1]) is str:
-        op1 = currentDirectory.getVariable(p[1])
+        op1 = currentDirectory.get_variable(p[1])
     else:
         op1 = currentDirectory.add_const(int, p[1])
     
