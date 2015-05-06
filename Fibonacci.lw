@@ -1,0 +1,21 @@
+program Fibonacci
+    var i, temp : int;
+    int function fibonacci(int n)
+    {
+        if(n < 2){
+            return n;
+        }
+        else{
+            return fibonacci(n - 1) + fibonacci(n - 2);
+        }end;
+    }
+    end
+    {
+        for(i = 0; i<20; i = i + 1){
+            temp = fibonacci(i);
+            print(temp);
+            forward temp;
+            right 90;
+        }end;
+    }
+    end
