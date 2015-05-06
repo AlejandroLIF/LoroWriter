@@ -67,17 +67,21 @@ program Example
         for(a=0; a<360; a = a + 1){
             forward 1;
             right 1;
+            
             if((a / 2) == 60){
                 color red;
                 print("I like red");
             }end;
-            if(a / 5 == 50){
+            
+            if((a / 5) == 50){
                 circle 20;
             }end;
+            
             if((a / 3) == 100){
                 color purple;
                 print("I like magenta more");
             }end;
+            
         }end;
         
         myFunction2(a,b);
